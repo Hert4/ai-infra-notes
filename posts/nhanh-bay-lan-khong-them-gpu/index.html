@@ -28,7 +28,7 @@
 
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
-  <figcaption>Với mỗi câu hỏi, máy làm hai việc nối nhau và cả hai đều dùng chung một con GPU. Việc thứ nhất là đọc hết câu hỏi. Đây là lúc người dùng ngồi chờ, chưa nhìn thấy chữ nào. Việc thứ hai là viết câu trả lời ra từng chữ. Trong hình, các khối dày là việc thứ nhất, các dòng mảnh là việc thứ hai. Phiên bản mới làm nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở việc thứ nhất.</figcaption>
+  <figcaption>Với mỗi câu hỏi, máy làm hai việc nối nhau và cả hai đều dùng chung một con GPU. Việc thứ nhất là đọc hết câu hỏi. Đây là lúc người dùng ngồi chờ, chưa nhìn thấy chữ nào. Việc thứ hai là viết câu trả lời ra từng chữ. Phiên bản mới làm nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở việc thứ nhất.</figcaption>
 </figure>
 
 <main>
@@ -80,7 +80,7 @@
 
 <figure>
   <img src="img/capacity.jpg" alt="Hai thanh ray dài bằng nhau: thanh trên lấp đầy bởi năm khối dài, thanh dưới lấp đầy bởi mười một khối ngắn hơn">
-  <figcaption>Một thẻ GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Request nào xong sớm thì trả chỗ sớm, nên cùng khoảng thời gian đó phục vụ được nhiều người hơn: 88 nghìn lên 194 nghìn request mỗi ngày trên mỗi pod, không mua thêm card nào, không đổi model, không đổi chất lượng câu trả lời. Hình: hai thanh ray dài bằng nhau, khối càng ngắn thì xếp được càng nhiều.</figcaption>
+  <figcaption>Một thẻ GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Request nào xong sớm thì trả chỗ sớm, nên cùng khoảng thời gian đó phục vụ được nhiều người hơn: 88 nghìn lên 194 nghìn request mỗi ngày trên mỗi pod, không mua thêm card nào, không đổi model, không đổi chất lượng câu trả lời.</figcaption>
 </figure>
 
 <div class="col">
@@ -101,7 +101,7 @@
 
 <figure>
   <img src="img/routes.jpg" alt="Một dòng chảy tách thành hai nhánh: nhánh trên rộng và mở, toàn bộ nước chảy qua đó; nhánh dưới bị một cửa cống đóng chặn lại, lòng kênh phía sau khô nứt nẻ">
-  <figcaption>Nhóm kernel thứ ba chỉ chạy khi một request dài hơn 95.000 token, mà loại request đó gần như không xuất hiện, nên nó gần như không bao giờ được gọi. Ngược lại, các layer linear-attention nằm trên đường đi của mọi request, dài hay ngắn đều phải qua, nên đổi cách tính ở đó là đổi cho toàn bộ traffic. Hình vẽ lại đúng hai nhánh này: nhánh trên nước chảy liên tục, nhánh dưới có cửa cống đóng và lòng kênh khô.</figcaption>
+  <figcaption>Nhóm kernel thứ ba chỉ chạy khi một request dài hơn 95.000 token, mà loại request đó gần như không xuất hiện, nên nó gần như không bao giờ được gọi. Ngược lại, các layer linear-attention nằm trên đường đi của mọi request, dài hay ngắn đều phải qua, nên đổi cách tính ở đó là đổi cho toàn bộ traffic.</figcaption>
 </figure>
 
 <div class="col">
@@ -147,7 +147,7 @@
 
 <figure>
   <img src="img/counter.jpg" alt="Băng chuyền hai làn: làn trên mỗi khay một quả, làn dưới mỗi khay ba quả, cả hai đều bị một cánh tay đếm gõ theo khay">
-  <figcaption>Khi bật spec decode, mỗi gói tin gửi về chứa trung bình 2,4 token chứ không phải một. Script đếm số gói tin rồi ghi thành số token, nên một câu trả lời 300 token về trong 124 gói bị ghi là 124 token, nhỏ hơn thực tế 2,4 lần. Hình: máy đếm gõ theo khay chứ không gõ theo quả, nên làn chở ba quả một khay lại đếm ra ít hơn.</figcaption>
+  <figcaption>Khi bật spec decode, mỗi gói tin gửi về chứa trung bình 2,4 token chứ không phải một. Script đếm số gói tin rồi ghi thành số token, nên một câu trả lời 300 token về trong 124 gói bị ghi là 124 token, nhỏ hơn thực tế 2,4 lần.</figcaption>
 </figure>
 
 <div class="col">
@@ -164,7 +164,7 @@
 
 <figure>
   <img src="img/pods.jpg" alt="Bên trái một vật đơn lẻ đổ bóng dài; bên phải đúng cái bóng đó hóa ra do năm vật giống hệt nhau tạo thành">
-  <figcaption>File cấu hình của cả hai workload đều ghi một pod. Thực tế phiên bản mới đang chạy 5 pod, phiên bản cũ chạy 2 pod. Lấy tổng lưu lượng mà không chia lại cho đúng số pod thì phiên bản mới được cộng khống 2,5 lần so với phiên bản cũ. Hình: tưởng một vật đổ bóng, hoá ra là năm vật.</figcaption>
+  <figcaption>File cấu hình của cả hai workload đều ghi một pod. Thực tế phiên bản mới đang chạy 5 pod, phiên bản cũ chạy 2 pod. Lấy tổng lưu lượng mà không chia lại cho đúng số pod thì phiên bản mới được cộng khống 2,5 lần so với phiên bản cũ.</figcaption>
 </figure>
 
 <div class="col">
@@ -185,7 +185,7 @@
 
 <figure>
   <img src="img/cylinders.jpg" alt="Hai ống đong đường kính khác nhau chứa cùng một lượng chất lỏng, mực nước cao thấp khác hẳn nhau">
-  <figcaption>Hai phiên bản nhận hai kiểu tải khác nhau, nên cùng một con số &ldquo;bao nhiêu request đang chạy&rdquo; lại ứng với hai khối lượng công việc khác hẳn. Đọc con số đó rồi kết luận bên nào chậm hơn là sai ngay từ chỗ chọn thước đo. Hình: hai ống đong to nhỏ khác nhau, đựng cùng một lượng nước, mực nước hiện lên cao thấp khác hẳn.</figcaption>
+  <figcaption>Hai phiên bản nhận hai kiểu tải khác nhau, nên cùng một con số &ldquo;bao nhiêu request đang chạy&rdquo; lại ứng với hai khối lượng công việc khác hẳn. Đọc con số đó rồi kết luận bên nào chậm hơn là sai ngay từ chỗ chọn thước đo.</figcaption>
 </figure>
 
 <div class="col">
