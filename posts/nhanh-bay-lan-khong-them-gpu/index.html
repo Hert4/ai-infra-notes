@@ -115,7 +115,7 @@
 
 <p>Sáu ngày, gần sáu triệu request, đúng 60 cái chạm ngưỡng. Sparse prefill gần như chưa bao giờ chạy, và toàn bộ mức tăng prefill thuộc về nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
 
-<p>Quy sai nguyên nhân thì lần sau cả bộ flag sparse-prefill sẽ được áp thẳng sang một model full-attention, mà ở đó nó không bao giờ chạy. Ai định mang bộ flag này sang model khác, đọc lại đoạn ngưỡng 95.000 token trước đã. Chọn cấu hình serving theo kiến trúc model và kiểu tải thật, đừng đếm xem bật được bao nhiêu flag.</p>
+<p>Điều đáng nhớ là ngưỡng kích hoạt do tải quyết định chứ không do model. Bộ flag đó mang sang chỗ khác vẫn nằm im nếu prompt ở đó không đủ dài.</p>
 
 <h2>Cùng đợt đó, misa-ai-2.0</h2>
 
@@ -174,15 +174,6 @@
 
 </div>
 
-<div class="col notes">
-  <h2>Ghi chú</h2>
-  <ol>
-    <li>Con số bảy lần trộn hai loại thống kê (trung bình uncached token chia cho TTFT p50) nên chỉ nên hiểu là khoảng chừng đó, không phải một hệ số chính xác. Chiều thì chắc chắn: 0,879 so với 0,098 giây, trong khi input bản mới chỉ ngắn hơn 25%.</li>
-    <li>Con số 2,8 xuống 1,2 giây tính từ TTFT p50 cộng 300 lần ITL median ở dải concurrency 1 tới 2, không phải đo thẳng một request cụ thể. Hai workload phục vụ client khác nhau nên không so thẳng latency đầu cuối được.</li>
-    <li>Hình minh họa và biểu đồ trong bài dựng bằng gpt-image-2.5. Mọi con số in trên biểu đồ đã đối chiếu lại với số liệu gốc.</li>
-    <li>Bài viết không liệt kê chi tiết flag và giá trị tuning của cấu hình serving.</li>
-  </ol>
-</div>
 
 </main>
 </div>
