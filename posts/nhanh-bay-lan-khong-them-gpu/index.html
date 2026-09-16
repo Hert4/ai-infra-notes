@@ -172,8 +172,6 @@
 
 <p>Phần việc nằm dưới hai con số đó không phải là sửa cấu hình. Để Gemma 4 chạy được trên backend attention nhanh, phải vá chính engine, gồm một bản vá lấy từ PR upstream chưa merge và một bản tự viết sau khi đo chữ ký hàm thật thay vì tin vào cách thư viện đoán. Để biết chia bộ nhớ GPU thế nào cho đúng, phải đo tải thật rồi mới dời ranh giới. Và để biết flag nào thực sự có công, phải đếm trong gần sáu triệu request xem có bao nhiêu cái chạm ngưỡng kích hoạt. Đáp số là sáu mươi.</p>
 
-<p>Thứ đáng nhớ không phải con số bảy lần. Cả hai lần nhanh lên đều đến từ chỗ không ai nhìn vào: một dòng khai báo backend bị bỏ quên, và một ranh giới chia bộ nhớ đặt sai chỗ. Phần cứng chưa bao giờ là thứ chặn đường.</p>
-
 <p>Cụm GPU của bạn nhiều khả năng cũng đang chạy dưới sức của nó. Hãy đẩy sản phẩm tới giới hạn mới và cho tôi biết chỗ nào còn nghẽn.</p>
 
 </div>
