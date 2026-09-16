@@ -1,0 +1,27 @@
+.gitignore
+  s_15c8c5d12ce90f::t_95fa7ee2aaa5d6 1
+README.md
+  s_15c8c5d12ce90f::t_cc63372a687547 1-26
+assets/site.css
+  s_15c8c5d12ce90f::t_9e875c74923d74 1-206
+index.html
+  s_15c8c5d12ce90f::t_ec8cefde8db0dd 1-65
+posts/nhanh-bay-lan-khong-them-gpu/index.html
+  s_15c8c5d12ce90f::t_c1268813b2051b 1-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "192ffa358beaf2d87679f279d91a9dd3c2fc5adc",
+  "prompts": {},
+  "sessions": {
+    "s_15c8c5d12ce90f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "020f0432-658b-46ae-842f-e393eee0e19f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "tmduc3 <tmduc3@rd.misa.com.vn>"
+    }
+  }
+}
