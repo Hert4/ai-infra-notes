@@ -23,7 +23,7 @@
   <p class="eyebrow">Hạ tầng suy luận</p>
   <h1>Nhanh bảy lần, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, và một dòng cấu hình mà suýt nữa tôi ghi công nhầm chỗ.</p>
+  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, và một dòng cấu hình mà suýt nữa tôi ghi công nhầm chỗ. Cuối bài là con thứ hai, <code>misa-ai-2.0</code>, đổi engine cùng đợt và mang về một cái bẫy đo đạc mà tôi chưa gặp bao giờ.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -196,15 +196,23 @@
 
 <div class="col">
 
-<p>Ở dải tải cao nhất thì chưa so được. Bản cũ chỉ có 3 giờ mẫu, bản mới có 28 giờ, và mức tải trung vị của hai bên chênh khoảng 6.000 token mỗi giây. Chừng đó dữ liệu chưa đủ để kết luận về vùng tải cực hạn.</p>
+<h2>Cùng đợt đó, misa-ai-2.0</h2>
 
-<p>ITL p99 ở vùng đó vì vậy vẫn để ngỏ, chờ một lượt benchmark có kiểm soát giữ y hệt cả kiểu tải lẫn tốc độ prefill giữa hai bản.</p>
+<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, và nó cũng đổi engine trong cùng đợt, từ vLLM sang sglang. Con số chắc chắn nhất ở đây là hàng đợi: thời gian một request nằm chờ tới lượt giảm từ 0,297 giây xuống 0,005 giây.</p>
 
-<p>ITL median thì thắng dưới cả hai cách ghép tải, kể cả cách bất lợi cho bản mới. Con số đó tôi tin.</p>
+<p>Nhưng thứ đáng kể lại ở con này là một cái bẫy thứ tư, và là cái tôi thích nhất.</p>
+
+<p>Có ba workload cùng phục vụ bộ trọng số đó, và cả ba đều khai <code>served-model-name</code> giống hệt nhau. Nhìn vào cấu hình thì đinh ninh chúng nhận cùng một loại traffic. Thực tế mỗi con gắn một api-key riêng, nên gateway trỏ ba luồng khác hẳn nhau: input trung bình 10.159, 8.714 và 14.272 token; output trung bình 100, 427 và 366 token.</p>
+
+<p>Hệ quả trực tiếp: bản mới đang gánh gấp mười lần lượng prefill của bản cũ, 1.350 so với 126 token mỗi pod mỗi giây. Đặt hai bên cạnh nhau rồi so tốc độ decode là lặp lại nguyên xi sai lầm ở lần thứ ba bên trên.</p>
+
+<p>Còn TTFT của bản cũ thì không đem khoe được. 23% request của nó có kèm ảnh và gần như ảnh mới mỗi lần, nên phải encode lại từ đầu. Con số TTFT p95 4,1 giây đo trên một pod gần như rảnh phần lớn là thời gian encode ảnh chứ không phải engine chậm. sglang không export metric tương đương nên chưa có cách đối chiếu.</p>
+
+<p>Cùng tên model không có nghĩa là cùng traffic. Trước khi so hai workload, kiểm luôn xem gateway đang đổ gì vào từng con.</p>
 
 <h2>Chốt lại</h2>
 
-<p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
+<p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình. Con <code>misa-ai-2.0</code> thì gần như xoá sạch thời gian nằm hàng đợi.</p>
 
 <p>Chi phí thật nằm chỗ khác: bốn ngày đo đạc và ba kết luận sai phải rút lại, cả ba hóa ra là một bài học đội ba lốt. Khi so hai hệ thống đang nhận tải khác nhau, thứ phải giữ cố định là thứ thực sự sinh ra chi phí. Và mọi bảng số phải in kèm số giờ mẫu cùng mức tải trung vị của từng dải, thiếu hai cột đó thì bảng nào nhìn cũng thuyết phục ngang nhau.</p>
 
