@@ -23,7 +23,7 @@
   <p class="eyebrow">Hạ tầng phục vụ mô hình</p>
   <h1>Đổi engine, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm GPU nội bộ</span></p>
-  <p class="lead">Đầu tháng 9, <code>misa-ai-1.1</code> được chuyển sang một engine mới. Thời gian chờ tới token đầu tiên từ 0,879 giây xuống 0,098 giây, và mỗi pod phục vụ gấp đôi số request. Vẫn bộ trọng số đó, vẫn từng ấy GPU, chất lượng output không đổi. Cuối bài là mô hình thứ hai, <code>misa-ai-2.0</code>, chuyển engine trong cùng đợt kèm một backend attention mới.</p>
+  <p class="lead">Đầu tháng 9, tôi chuyển <code>misa-ai-1.1</code> sang một engine mới. Thời gian chờ tới token đầu tiên từ 0,879 giây xuống 0,098 giây, và mỗi pod phục vụ gấp đôi số request. Vẫn bộ trọng số đó, vẫn từng ấy GPU, chất lượng output không đổi. Cùng đợt, <code>misa-ai-2.0</code> cũng đổi engine kèm một backend attention mới.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -35,15 +35,15 @@
 
 <h2>Một lần đổi engine, không đổi gì khác</h2>
 
-<p><code>misa-ai-1.1</code> chạy production trên cụm nội bộ, khoảng một triệu request mỗi ngày. Về kỹ thuật: MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8.</p>
+<p><code>misa-ai-1.1</code> phục vụ khoảng một triệu request mỗi ngày trên cụm GPU nội bộ. Đây là model MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8.</p>
 
-<p>Đầu tháng 9 tôi chuyển nó sang một bản SGLang mới hơn kèm cấu hình attention khác. Mọi thứ còn lại giữ nguyên: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp, và cả hai bản đều không bật speculative decoding. Vậy nên chênh lệch đo được là do engine, không phải do phần cứng hay model.</p>
+<p>Khi nâng cấp, tôi giữ nguyên mọi thứ trừ engine: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp, và cả hai bản đều không bật speculative decoding. Tôi muốn biết chắc phần nhanh lên đến từ đâu, nên chỉ đổi đúng một biến.</p>
 
 <h2>Kết quả trên traffic thật</h2>
 
 <p>Prefill là lúc engine đọc hết input, và đây là quãng chờ trước khi có token đầu tiên. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine quyết định cả thời gian chờ lẫn tốc độ sinh token.</p>
 
-<p>Bản mới nhanh hơn ở cả hai, chênh lệch lớn nhất nằm ở prefill.</p>
+<p>Bản mới nhanh hơn ở cả hai. Chênh lệch lớn nhất nằm ở prefill, và đó cũng là phần người dùng cảm thấy rõ nhất.</p>
 
 </div>
 
@@ -69,17 +69,19 @@
 
 <p>Request hoàn tất sớm thì giải phóng GPU sớm, nên cùng một pod phục vụ được 194 nghìn request mỗi ngày thay vì 88 nghìn.</p>
 
+<p>Nếu sản phẩm của bạn đang gọi <code>misa-ai-1.1</code>, đây là phần bạn thấy ngay mà không phải sửa gì: câu trả lời bắt đầu hiện gần như tức thì thay vì sau gần một giây, và cùng lượng GPU đó chịu được gấp đôi lượng người dùng.</p>
+
 <h2>Đã sửa gì trên misa-ai-1.1</h2>
 
-<p>Weights, tokenizer và chat template giữ nguyên. Các service gọi sang nó cũng không sửa dòng code nào. Bốn thay đổi, tất cả nằm ở tầng engine.</p>
+<p>Bốn thay đổi, tất cả nằm ở tầng engine. Tôi không đụng vào weights, tokenizer hay chat template, và các service gọi sang nó cũng không sửa dòng code nào.</p>
 
-<p><b>Một, nâng container image</b>, cách bản cũ khoảng hai tháng phát triển upstream.</p>
+<p><b>Một, nâng container image.</b> Bản mới cách bản cũ khoảng hai tháng phát triển upstream.</p>
 
 <p><b>Hai, cho lớp linear-attention một kernel đọc prompt viết riêng.</b> Model là kiến trúc hybrid, phần lớn layer dùng linear attention, nhưng cấu hình cũ không khai báo backend cho nhóm này nên chúng chạy bằng kernel chung, vốn viết cho kiểu attention khác. Kernel mới viết đúng cho loại layer đó, và với prompt rất dài thì được phép bỏ qua phần không cần đọc lại.</p>
 
 <p><b>Ba, chia lại bộ nhớ GPU.</b> Model hybrid này cần hai vùng nhớ co giãn theo hai thứ khác hẳn nhau.</p>
 
-<p>Các layer full-attention phải nhớ nguyên văn: mỗi token đọc vào thì cất thêm một cặp khoá và giá trị của token đó, nên vùng này dày lên theo từng token, khoảng 20 KB mỗi token. Đây là KV cache.</p>
+<p>Các layer full-attention phải nhớ nguyên văn: mỗi token đọc vào thì cất thêm cặp K và V của token đó, nên vùng này dày lên theo từng token, khoảng 20 KB mỗi token. Đây là KV cache.</p>
 
 <p>Các layer linear-attention thì không giữ lịch sử. Mỗi layer mang theo một ma trận cố định, và mỗi token mới đi qua chỉ cập nhật vào ma trận đó chứ không ghi thêm dòng nào. Đọc 10 nghìn hay 100 nghìn token thì ma trận vẫn đúng chừng ấy ô. Với model này là 30 layer như vậy, cộng lại khoảng 63 MB cho mỗi request đang chạy, và con số đó không đổi dù prompt dài hay ngắn.</p>
 
@@ -100,7 +102,7 @@
 
 <h2>Tốc độ đến từ đâu</h2>
 
-<p>Nhóm flag sparse prefill là ứng viên rõ ràng nhất: kernel viết cho context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín. Nhưng nó chỉ chạy khi KV cache của một request vượt 95.000 token.</p>
+<p>Nhóm flag sparse prefill là ứng viên rõ ràng nhất: kernel viết cho context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín. Trước khi ghi công, tôi đi kiểm điều kiện để nó thực sự chạy. Nó chỉ chạy khi KV cache của một request vượt 95.000 token.</p>
 
 </div>
 
@@ -117,7 +119,7 @@
 
 <h2>Cùng đợt đó, misa-ai-2.0</h2>
 
-<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, chuyển sang sglang trong cùng đợt. Lần này phần việc nặng hơn: trước khi đổi được backend attention, phải sửa chính engine.</p>
+<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, tôi chuyển sang sglang trong cùng đợt. Lần này phần việc nặng hơn: trước khi đổi được backend attention, phải sửa chính engine.</p>
 
 <p>sglang có bốn backend attention, và trên H200 thì Gemma 4 chỉ dùng được cái chậm nhất. Lý do nằm ở cấu trúc model: 25 trong 30 layer là sliding-window với head_dim 256, còn 5 layer full-attention chạy ở head_dim 512 vì gộp K với V làm một tensor. Hai backend nhanh nhất chặn cứng head_dim ở 256 nên từ chối thẳng. Backend còn lại nhận được 512 nhưng chưa bao giờ nạp nổi trong image đang dùng.</p>
 
@@ -131,7 +133,7 @@
 <div class="col">
 
 
-<p>Hai bản vá gỡ chỗ đó. Bản thứ nhất sửa kernel chậm: nó đặt cứng số khối K/V được chở song song với việc tính là một, tức chở một khối, chờ về, tính xong rồi mới chở khối sau, và suốt lúc chờ thì phần tính của GPU ngồi không. Khối ở head_dim 512 nặng gấp đôi nên khoảng ngồi không cũng dài gấp đôi. Bản vá cho kernel chọn số khối theo head_dim thay vì đặt cứng.</p>
+<p>Tôi viết hai bản vá để gỡ chỗ đó. Bản thứ nhất sửa kernel chậm: nó đặt cứng số khối K/V được chở song song với việc tính là một, tức chở một khối, chờ về, tính xong rồi mới chở khối sau, và suốt lúc chờ thì phần tính của GPU ngồi không. Khối ở head_dim 512 nặng gấp đôi nên khoảng ngồi không cũng dài gấp đôi. Bản vá cho kernel chọn số khối theo head_dim thay vì đặt cứng.</p>
 
 </div>
 
@@ -147,15 +149,15 @@
 
 <p>Sau hai bản vá, model chạy được trên backend nhanh, và CompactAttention dựng tiếp trên nền đó. Thay vì quét toàn bộ prefix ở mỗi bước, CompactAttention chia prefix thành từng khối rồi chỉ giữ lại các khối quan trọng nhất, và chỉ bật khi prefix vượt 8.192 token. Kết quả trực tiếp: đọc 152.000 token trong 9,6 giây.</p>
 
-<p>Không phải thấy nhanh hơn là chuyển ngay. Cuối tháng 8, một lượt đo riêng trên 1×H200 với prompt 27,6 nghìn token không dùng lại cache cho thấy sglang nhanh hơn vLLM 1,15 lần, thêm ba bản vá kernel thì lên 1,27 lần. Chưa đủ để đánh đổi một lần chuyển production.</p>
+<p>Thấy nhanh hơn chưa đủ để chuyển. Cuối tháng 8, một lượt đo riêng trên 1×H200 với prompt 27,6 nghìn token không dùng lại cache cho thấy sglang nhanh hơn vLLM 1,15 lần, thêm ba bản vá kernel thì lên 1,27 lần. Chừng đó không đáng để đánh đổi một lần chuyển production, nên tôi giữ nguyên hiện trạng và đi tìm phần còn thiếu.</p>
 
-<p>Phép thử quyết định là chạy lại đúng chuỗi request của sự cố ngày 4 tháng 9, nhưng ép nhanh gấp 2,5 lần so với lúc nó xảy ra thật.</p>
+<p>Phép thử quyết định là chạy lại đúng chuỗi request của sự cố ngày 4 tháng 9, ép nhanh gấp 2,5 lần so với lúc nó xảy ra thật. Tôi muốn biết bản mới có chịu được đúng cái đã làm sập bản cũ hay không.</p>
 
 </div>
 
 <figure>
-  <img src="img/ch-replay.jpg" alt="Biểu đồ cột ngang: vLLM 46,0 giây, sglang 3,2 giây độ trễ trung bình trên cùng một chuỗi request">
-  <figcaption><b>Chạy lại chuỗi request của sự cố ngày 4 tháng 9, ép nhanh gấp 2,5 lần.</b> Cùng phần cứng, cùng chuỗi request, chỉ khác engine và backend attention. Độ trễ trung bình 46,0 giây xuống 3,2 giây. Không chỉ nhanh hơn, bản mới còn xử lý thêm 24% request mỗi phút.</figcaption>
+  <img src="img/ch-replay.jpg" alt="Biểu đồ cột ngang: vLLM 46,0 giây, sglang 3,2 giây latency trung bình trên cùng một chuỗi request">
+  <figcaption><b>Chạy lại chuỗi request của sự cố ngày 4 tháng 9, ép nhanh gấp 2,5 lần.</b> Cùng phần cứng, cùng chuỗi request, chỉ khác engine và backend attention. Latency trung bình 46,0 giây xuống 3,2 giây. Không chỉ nhanh hơn, bản mới còn xử lý thêm 24% request mỗi phút.</figcaption>
 </figure>
 
 <div class="col">
@@ -168,13 +170,15 @@
 
 <p>Một lần thay image, thêm vài dòng cấu hình, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Toàn bộ số liệu lấy từ traffic thật trong sáu ngày, và đã chia lại theo đúng số pod mà mỗi bản đang chạy.</p>
 
+<p>Phần lớn cụm GPU ở đâu cũng đang chạy dưới sức của nó, và thứ chặn lại thường không phải phần cứng. Hạ tầng giờ chịu được gấp đôi tải trên cùng số GPU, nên hãy đẩy sản phẩm của bạn tới giới hạn mới đó và cho tôi biết chỗ nào còn nghẽn.</p>
+
 </div>
 
 <div class="col notes">
   <h2>Ghi chú</h2>
   <ol>
     <li>Con số bảy lần trộn hai loại thống kê (trung bình uncached token chia cho TTFT p50) nên chỉ nên hiểu là khoảng chừng đó, không phải một hệ số chính xác. Chiều thì chắc chắn: 0,879 so với 0,098 giây, trong khi input bản mới chỉ ngắn hơn 25%.</li>
-    <li>Con số 2,8 xuống 1,2 giây tính từ TTFT p50 cộng 300 lần ITL median ở dải concurrency 1 tới 2, không phải đo thẳng một request cụ thể. Hai workload phục vụ client khác nhau nên không so thẳng độ trễ đầu cuối được.</li>
+    <li>Con số 2,8 xuống 1,2 giây tính từ TTFT p50 cộng 300 lần ITL median ở dải concurrency 1 tới 2, không phải đo thẳng một request cụ thể. Hai workload phục vụ client khác nhau nên không so thẳng latency đầu cuối được.</li>
     <li>Hình minh họa và biểu đồ trong bài dựng bằng gpt-image-2.5. Mọi con số in trên biểu đồ đã đối chiếu lại với số liệu gốc.</li>
     <li>Bài viết không liệt kê chi tiết flag và giá trị tuning của cấu hình serving.</li>
   </ol>
