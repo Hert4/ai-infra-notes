@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nhanh bảy lần, không thêm GPU · MISA AI Platform</title>
-<meta name="description" content="Đổi engine cho một model 35 tỷ tham số đang chạy production: prefill nhanh hơn bảy lần, cùng số GPU, cùng trọng số.">
+<meta name="description" content="misa-ai-1.1 đổi engine suy luận: prefill nhanh hơn bảy lần, mỗi pod gánh gấp đôi request, cùng số GPU và cùng bộ trọng số.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -23,9 +23,8 @@
   <p class="eyebrow">Hạ tầng suy luận</p>
   <h1>Nhanh bảy lần, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead"><code>misa-ai-1.1</code> đang chạy production được chuyển sang engine mới. Cùng bộ trọng số, cùng số GPU, chất lượng câu trả lời không đổi. Sáu ngày traffic thật sau đó: prefill nhanh hơn bảy lần, người dùng chờ ít đi gần chín lần, mỗi GPU gánh gấp đôi số request. Bài này đưa ra các con số, chỉ ra tốc độ đó thực sự đến từ đâu, và kể lại ba lần tôi phải tự bác bỏ mình trước khi dám tin chúng.</p>
+  <p class="lead">Một lần đổi engine trên <code>misa-ai-1.1</code>. Cùng bộ trọng số, cùng số GPU, chất lượng output không đổi. Sáu ngày traffic production sau đó: prefill nhanh hơn bảy lần, người dùng chờ ít đi gần chín lần, mỗi pod gánh gấp đôi số request. Đây là các con số, nguồn gốc thật của tốc độ đó, và ba lần chính phép đo suýt nói ngược lại sự thật.</p>
 </header>
-
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
   <figcaption>Mỗi request đi qua hai giai đoạn nối nhau và cả hai đều dùng chung một GPU. Giai đoạn đầu là đọc hết prompt. Đây là lúc người dùng ngồi chờ, chưa nhận được token nào. Giai đoạn sau là sinh câu trả lời ra từng token. Phiên bản mới nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở giai đoạn đầu.</figcaption>
@@ -34,23 +33,21 @@
 <main>
 <div class="col">
 
-<h2>Đổi engine, giữ nguyên mọi thứ khác</h2>
+<h2>Một lần đổi engine, không đổi gì khác</h2>
 
-<p><code>misa-ai-1.1</code> phục vụ người dùng thật trên cụm nội bộ, mỗi ngày khoảng một triệu request. Về kỹ thuật: MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8. Ba đặc điểm này sẽ quay lại ở phần giải thích nguyên nhân.</p>
+<p><code>misa-ai-1.1</code> chạy production trên cụm nội bộ và nhận khoảng một triệu request mỗi ngày. Về kỹ thuật: MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8. Ba đặc điểm này quyết định phần cuối bài.</p>
 
 <p>Đầu tháng 9 tôi chuyển nó sang một bản SGLang mới hơn kèm cấu hình attention khác. Mọi thứ còn lại giữ nguyên: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp. Cả hai bản đều không bật speculative decoding.</p>
 
-<p>Nhờ vậy, chênh lệch đo được sau đó thuộc về engine và cấu hình, không phải phần cứng hay model.</p>
+<p>Một phép so sạch như vậy hiếm khi có được trên hệ thống đang chạy thật. Chênh lệch đo được sau đó thuộc về engine và cấu hình, không còn đường nào đổ cho phần cứng hay model.</p>
 
+<h2>Người dùng nhận được gì</h2>
 
+<p>Mỗi request đi qua hai giai đoạn, và chúng chạm vào trải nghiệm theo hai cách khác nhau.</p>
 
-<h2>Người dùng được hưởng lợi gì?</h2>
+<p>Prefill là lúc engine đọc hết input. Người dùng ngồi chờ suốt quãng này, chưa nhận được token nào. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine quyết định thẳng cả thời gian chờ ban đầu lẫn tốc độ sinh token.</p>
 
-<p>Hai giai đoạn đó tác động lên trải nghiệm theo hai cách khác nhau.</p>
-
-<p>Prefill là lúc engine đọc hết input. Người dùng ngồi chờ suốt quãng này, chưa nhận được token nào. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine ảnh hưởng thẳng tới cả thời gian chờ ban đầu lẫn tốc độ sinh token.</p>
-
-<p>Bản mới nhanh hơn ở cả hai. Prefill là chỗ nó thắng đậm.</p>
+<p>Bản mới thắng ở cả hai. Prefill là chỗ nó thắng đậm.</p>
 
 </div>
 
@@ -61,7 +58,7 @@
 
 <div class="col">
 
-<p>Decode cũng nhanh hơn, đều ở mọi mức tải tôi đo được.</p>
+<p>Decode nhanh hơn ở mọi mức tải đo được, và khoảng cách nới rộng đúng lúc tải lên cao.</p>
 
 </div>
 
@@ -74,7 +71,7 @@
 
 <p>Ghép hai giai đoạn lại thì ra con số người dùng thực sự cảm thấy. Với response 300 token, tính theo median đo trong production, tổng thời gian từ lúc gửi request tới lúc nhận đủ câu trả lời giảm từ 2,8 xuống 1,2 giây. Quãng chờ trước token đầu tiên giảm từ 0,88 xuống 0,10 giây. Thời gian nằm trong hàng đợi lúc máy bận giảm từ 0,099 xuống 0,005 giây.</p>
 
-<p>Request xong sớm thì trả GPU sớm, nên cùng một pod gánh được nhiều hơn: 88 nghìn lên 194 nghìn request mỗi ngày.</p>
+<p>Request xong sớm thì trả GPU sớm. Cùng một pod vì vậy gánh được 194 nghìn request mỗi ngày thay vì 88 nghìn.</p>
 
 </div>
 
@@ -85,9 +82,9 @@
 
 <div class="col">
 
-<h2>Cụ thể thì đã làm gì</h2>
+<h2>Ba thay đổi, không cái nào chạm vào model</h2>
 
-<p>Ba thay đổi, không cái nào chạm vào model. Weights, tokenizer và chat template giữ nguyên. Các service gọi sang nó cũng không sửa dòng code nào.</p>
+<p>Weights, tokenizer và chat template giữ nguyên. Các service gọi sang nó cũng không sửa dòng code nào.</p>
 
 <p>Thứ nhất, nâng container image. Bản cũ chạy từ đầu tháng 7, bản mới ra đầu tháng 9, cách nhau khoảng hai tháng phát triển upstream.</p>
 
@@ -95,7 +92,7 @@
 
 <p>Thứ ba, bật nhóm sparse prefill kernel cho lớp full-attention. Kernel này sinh ra cho prompt context rất dài, và nó có một ngưỡng kích hoạt theo độ dài KV cache.</p>
 
-<p>Thay đổi thứ hai mang về phần lớn mức tăng prefill. Nhìn vào cấu hình thì khó đoán ra, vì nhóm flag của thay đổi thứ ba dài gấp bảy lần nên rất dễ được ghi công nhầm. Phần còn lại, rõ nhất ở tốc độ decode, thuộc về bản build mới.</p>
+<p>Thay đổi thứ hai mang về phần lớn mức tăng prefill. Nhìn vào cấu hình thì khó đoán ra, vì nhóm flag của thay đổi thứ ba dài gấp bảy lần nên rất dễ được ghi công nhầm.</p>
 
 </div>
 
@@ -106,13 +103,11 @@
 
 <div class="col">
 
-<h2>Nhưng hiệu năng được cải thiện nhờ đâu?</h2>
+<h2>Tốc độ đến từ đâu</h2>
 
-<p>Cấu hình mới thêm một nhóm flag cho sparse prefill kernel, loại kernel viết cho prompt context rất dài. Đọc cấu hình thì rất dễ kết luận chính nó làm nên tốc độ.</p>
+<p>Nhóm flag sparse prefill trông đúng như thủ phạm. Kernel viết cho prompt context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín.</p>
 
-<p>Trước khi ghi công, tôi đi kiểm điều kiện để kernel đó thực sự chạy.</p>
-
-<p>Nó chỉ chạy khi KV cache của một request vượt 95.000 token. Prompt thật của workload này ngắn hơn ngưỡng đó rất nhiều.</p>
+<p>Trước khi ghi công, tôi đi kiểm điều kiện để kernel đó thực sự chạy. Nó chỉ chạy khi KV cache của một request vượt 95.000 token.</p>
 
 </div>
 
@@ -123,23 +118,19 @@
 
 <div class="col">
 
-<p>Phần lớn mức cải thiện vì vậy đến từ prefill backend của nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
+<p>Sáu ngày, gần sáu triệu request, đúng 60 cái chạm ngưỡng. Sparse prefill gần như chưa bao giờ chạy, và toàn bộ mức tăng prefill thuộc về prefill backend của nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
 
 <p>Chi tiết này quyết định các lần nâng cấp sau. Ghi công nhầm thì sẽ có người bê nguyên bộ sparse-prefill flags sang một model full-attention rồi ngồi thắc mắc vì sao không nhanh lên, đơn giản vì điều kiện kích hoạt không bao giờ xuất hiện trong workload của họ.</p>
 
 <p>Chọn cấu hình serving theo kiến trúc model và hình dạng workload, đừng chọn theo số lượng flag bật được.</p>
 
-</div>
+<h2>Ba lần con số suýt nói ngược lại sự thật</h2>
 
-<div class="col">
+<p>Bảy lần là con số đủ lớn để đáng nghi. Tôi nghi, nên đi tìm cách bác bỏ nó. Tìm được ba lỗi trong chính cách đo của mình.</p>
 
-<h2>Vì sao có thể tin vào những con số này?</h2>
+<h3>Lần thứ nhất: đếm nhầm đơn vị</h3>
 
-<p>Bảy lần là con số đủ lớn để đáng nghi. Tôi nghi, nên đi tìm cách bác bỏ nó. Tìm được ba lỗi trong cách đo ban đầu.</p>
-
-<h3>Lần thứ nhất: nhầm đơn vị đo</h3>
-
-<p>Trên một endpoint có spec decode, mỗi SSE chunk chở trung bình 2,4 token. Script đo đầu tiên đếm chunk rồi ghi thành token, nên một response 300 token về trong 124 chunk bị ghi là 124.</p>
+<p>Trên một endpoint có spec decode, mỗi chunk SSE chở trung bình 2,4 token. Script đo đầu tiên đếm chunk rồi ghi thành số token, nên một response 300 token về trong 124 chunk bị ghi là 124.</p>
 
 <p>Một cải tiến 2,4 lần hiện ra thành bước lùi. Sai số đi theo chiều đó thì khó bị chất vấn, vì nó khớp với định kiến rằng bản mới hay sinh regression.</p>
 
@@ -152,13 +143,11 @@
 
 <div class="col">
 
-<h3>Lần thứ hai: nhầm số lượng pod</h3>
+<h3>Lần thứ hai: đếm nhầm số pod</h3>
 
 <p>Cấu hình của cả hai workload đều khai báo một replica. Thực tế bản mới chạy 5 pod, bản cũ chạy 2 pod.</p>
 
-<p>Autoscaler của Kubernetes đã scale trong lúc vận hành mà không ghi ngược vào cấu hình, nên đọc file cấu hình thì không thấy gì bất thường.</p>
-
-<p>Cách duy nhất biết được là đếm số process đang export metric về Prometheus. Mọi con số trong bài đều đã chia theo số pod thật.</p>
+<p>Autoscaler của Kubernetes đã scale trong lúc vận hành mà không ghi ngược vào cấu hình, nên đọc file cấu hình thì không thấy gì bất thường. Cách duy nhất biết được là đếm số process đang export metric về Prometheus. Mọi con số trong bài đều đã chia theo số pod thật.</p>
 
 </div>
 
@@ -169,18 +158,18 @@
 
 <div class="col">
 
-<h3>Lần thứ ba: cố định sai biến khi đánh giá ITL</h3>
+<h3>Lần thứ ba: giữ cố định nhầm biến</h3>
 
 <p>Câu hỏi còn lại: tải cao thì bản mới có chậm decode hơn không? Phải nhìn p99 chứ không nhìn trung vị. P99 là mốc mà 99% request nằm dưới, tức phần đuôi gồm 1% request xui nhất. Trung vị đẹp mà p99 xấu thì vẫn có người phải ngồi chờ lâu bất thường.</p>
 
 <p>Tôi giữ cố định số request chạy cùng lúc trên mỗi pod rồi so ITL p99. Dải tải cao nhất ra 32,9 ms so với 180,8 ms, và tôi viết luôn câu kết luận.</p>
 
-</div>
-
 <div class="retract">
   <span class="tag">Kết luận đã rút lại</span>
   <p><s>Phiên bản mới đánh đổi tốc độ decode lấy latency: ITL p99 kém hơn khoảng 5,5 lần khi tải cao.</s></p>
   <p>Vấn đề nằm ở biến được cố định trong phép so sánh.</p>
+</div>
+
 </div>
 
 <figure>
@@ -215,9 +204,7 @@
 
 <p>Giữa lúc đang đo, dashboard Grafana của một workload khác tụt xuống 0% hiệu suất. Panel refresh 5 giây một lần, nhìn rất giống sự cố thật.</p>
 
-<p>Công thức của panel là số request đang chạy chia cho tổng đang chạy và đang chờ, cộng một epsilon nhỏ ở mẫu để khỏi chia cho 0.</p>
-
-<p>Lúc rảnh hoàn toàn nó trả về 100%. Muốn xuống 0% thì phải có request nằm chờ trong khi không có request nào đang chạy. Prometheus chụp trúng đúng trạng thái đó trong một nhịp scrape, rồi treo nguyên suốt một phút.</p>
+<p>Công thức của panel là số request đang chạy chia cho tổng đang chạy và đang chờ, cộng một epsilon nhỏ ở mẫu để khỏi chia cho 0. Lúc rảnh hoàn toàn nó trả về 100%. Muốn xuống 0% thì phải có request nằm chờ trong khi không có request nào đang chạy. Prometheus chụp trúng đúng trạng thái đó trong một nhịp scrape, rồi treo nguyên suốt một phút.</p>
 
 <p>Quét lại cả tuần thì thấy đúng 9 trên 10.080 điểm đo rơi xuống dưới ngưỡng đỏ, mỗi điểm gói gọn trong một phút. Không request nào bị abort trong các phút đó, độ trễ không nhúc nhích so với hai phút liền kề, và không pod nào restart trong bốn ngày trước đó. Model không hề có sự cố; công thức của panel mới là thứ cần sửa.</p>
 
@@ -231,7 +218,7 @@
   <li><strong>Tỷ lệ abort 1,85% trên phiên bản mới.</strong> Đều đặn từ ngày đầu, bám theo lưu lượng, không kèm tăng latency. Giống client tự ngắt hơn là engine hỏng, nhưng chưa chứng minh được từ phía engine.</li>
 </ul>
 
-<h2>Điều đáng mang đi</h2>
+<h2>Chốt lại</h2>
 
 <p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
 
@@ -249,14 +236,9 @@
   </ol>
 </div>
 
-<div class="col">
-<footer class="end">
-  Số liệu lấy từ traffic production trên cụm suy luận nội bộ, đọc qua Prometheus, cửa sổ sáu ngày. Không có lượt benchmark tổng hợp nào được chạy để viết bài này.
-</footer>
-</div>
-
 </main>
 </div>
+
 <footer class="sitefoot">
   <a href="../../">&larr; Quay lại danh sách bài viết</a>
 </footer>
