@@ -23,7 +23,7 @@
   <p class="eyebrow">Hạ tầng suy luận</p>
   <h1>Nhanh bảy lần, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead">Một lần đổi engine trên <code>misa-ai-1.1</code>. Cùng bộ trọng số, cùng số GPU, chất lượng output không đổi. Sáu ngày traffic production sau đó: prefill nhanh hơn bảy lần, người dùng chờ ít đi gần chín lần, mỗi pod gánh gấp đôi số request. Đây là các con số, nguồn gốc thật của tốc độ đó, và ba lần chính phép đo suýt nói ngược lại sự thật.</p>
+  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, và một dòng cấu hình mà suýt nữa tôi ghi công nhầm chỗ.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -105,7 +105,9 @@
 
 <h2>Tốc độ đến từ đâu</h2>
 
-<p>Nhóm flag sparse prefill trông đúng như thủ phạm. Kernel viết cho prompt context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín.</p>
+<p>Ai từng tune serving đều biết cảm giác này: bật một loạt flag, hệ thống nhanh lên thật, rồi không ai dám chắc flag nào có công.</p>
+
+<p>Ở đây nhóm flag sparse prefill trông đúng như thủ phạm. Kernel viết cho prompt context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín.</p>
 
 <p>Trước khi ghi công, tôi đi kiểm điều kiện để kernel đó thực sự chạy. Nó chỉ chạy khi KV cache của một request vượt 95.000 token.</p>
 
@@ -120,13 +122,13 @@
 
 <p>Sáu ngày, gần sáu triệu request, đúng 60 cái chạm ngưỡng. Sparse prefill gần như chưa bao giờ chạy, và toàn bộ mức tăng prefill thuộc về prefill backend của nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
 
-<p>Chi tiết này quyết định các lần nâng cấp sau. Ghi công nhầm thì sẽ có người bê nguyên bộ sparse-prefill flags sang một model full-attention rồi ngồi thắc mắc vì sao không nhanh lên, đơn giản vì điều kiện kích hoạt không bao giờ xuất hiện trong workload của họ.</p>
+<p>Chi tiết này quyết định các lần nâng cấp sau. Nếu báo cáo ghi công nhầm, sẽ có người bê nguyên bộ sparse-prefill flags sang một model full-attention rồi ngồi thắc mắc vì sao chẳng nhanh lên, đơn giản vì điều kiện kích hoạt không bao giờ xuất hiện trong workload của họ.</p>
 
-<p>Chọn cấu hình serving theo kiến trúc model và hình dạng workload, đừng chọn theo số lượng flag bật được.</p>
+<p>Ai đang serving model hybrid thì để ý đúng chỗ này: chọn cấu hình theo kiến trúc model và hình dạng workload, đừng chọn theo số lượng flag bật được.</p>
 
 <h2>Ba lần con số suýt nói ngược lại sự thật</h2>
 
-<p>Bảy lần là con số đủ lớn để đáng nghi. Tôi nghi, nên đi tìm cách bác bỏ nó. Tìm được ba lỗi trong chính cách đo của mình.</p>
+<p>Bảy lần là con số đủ lớn để chính tôi không tin. Nên tôi đi tìm cách bác bỏ nó trước khi đem đi khoe. Tìm được ba lỗi, cả ba đều nằm trong cách đo của mình.</p>
 
 <h3>Lần thứ nhất: đếm nhầm đơn vị</h3>
 
@@ -223,6 +225,8 @@
 <p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
 
 <p>Chi phí thật nằm chỗ khác: bốn ngày đo đạc và ba kết luận sai phải rút lại, cả ba hóa ra là một bài học đội ba lốt. Khi so hai hệ thống đang nhận tải khác nhau, thứ phải giữ cố định là thứ thực sự sinh ra chi phí. Và mọi bảng số phải in kèm số giờ mẫu cùng mức tải trung vị của từng dải, thiếu hai cột đó thì bảng nào nhìn cũng thuyết phục ngang nhau.</p>
+
+<p>Con số đẹp thì dễ khoe. Phần khó là biết chắc nó đo đúng thứ mình tưởng.</p>
 
 </div>
 
