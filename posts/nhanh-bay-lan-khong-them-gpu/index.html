@@ -77,9 +77,13 @@
 
 <p><b>Hai, cho lớp linear-attention một kernel đọc prompt viết riêng.</b> Model là kiến trúc hybrid, phần lớn layer dùng linear attention, nhưng cấu hình cũ không khai báo backend cho nhóm này nên chúng chạy bằng kernel chung, vốn viết cho kiểu attention khác. Kernel mới viết đúng cho loại layer đó, và với prompt rất dài thì được phép bỏ qua phần không cần đọc lại.</p>
 
-<p><b>Ba, chia lại bộ nhớ GPU.</b> Model hybrid này cần hai vùng nhớ khác hẳn nhau. Vùng thứ nhất là KV cache, tốn khoảng 20 KB cho mỗi token, nên nó lớn dần theo độ dài prompt. Vùng thứ hai giữ trạng thái của 30 layer linear-attention, tốn khoảng 63 MB cho mỗi request đang chạy, và con số đó cố định dù prompt dài hay ngắn.</p>
+<p><b>Ba, chia lại bộ nhớ GPU.</b> Model hybrid này cần hai vùng nhớ co giãn theo hai thứ khác hẳn nhau.</p>
 
-<p>Engine chia bộ nhớ GPU cho hai vùng theo một tỉ lệ mặc định. Với tải của MISA, thứ đẩy tới giới hạn là số request chạy song song chứ không phải độ dài prompt, nên vùng 63 MB cạn trước trong khi KV cache còn thừa chỗ. Request mới phải xếp hàng dù GPU vẫn còn bộ nhớ trống. Dời ranh giới theo số đo thật thì cả hai vùng cùng dùng hết, và độ dài context giữ nguyên.</p>
+<p>Các layer full-attention phải nhớ nguyên văn: mỗi token đọc vào thì cất thêm một cặp khoá và giá trị của token đó, nên vùng này dày lên theo từng token, khoảng 20 KB mỗi token. Đây là KV cache.</p>
+
+<p>Các layer linear-attention thì không giữ lịch sử. Mỗi layer mang theo một ma trận cố định, và mỗi token mới đi qua chỉ cập nhật vào ma trận đó chứ không ghi thêm dòng nào. Đọc 10 nghìn hay 100 nghìn token thì ma trận vẫn đúng chừng ấy ô. Với model này là 30 layer như vậy, cộng lại khoảng 63 MB cho mỗi request đang chạy, và con số đó không đổi dù prompt dài hay ngắn.</p>
+
+<p>Engine chia bộ nhớ GPU cho hai vùng theo một tỉ lệ mặc định. Với tải của MISA, thứ đẩy tới giới hạn là số request chạy song song chứ không phải độ dài prompt: mỗi request chiếm đủ 63 MB kể cả khi nó chỉ hỏi một câu ngắn. Vùng đó cạn trước trong khi KV cache còn thừa chỗ, nên request mới phải xếp hàng dù GPU vẫn còn bộ nhớ trống. Dời ranh giới theo số đo thật thì cả hai vùng cùng dùng hết, và độ dài context giữ nguyên.</p>
 
 </div>
 
