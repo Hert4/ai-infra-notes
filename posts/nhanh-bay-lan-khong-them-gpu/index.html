@@ -23,7 +23,7 @@
   <p class="eyebrow">Hạ tầng phục vụ mô hình</p>
   <h1>Đổi engine, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm GPU nội bộ</span></p>
-  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, chất lượng câu trả lời không đổi. Cuối bài là mô hình thứ hai, <code>misa-ai-2.0</code>, chuyển engine trong cùng đợt kèm một backend attention mới.</p>
+  <p class="lead">Đầu tháng 9, <code>misa-ai-1.1</code> được chuyển sang một engine mới. Thời gian chờ tới token đầu tiên từ 0,879 giây xuống 0,098 giây, và mỗi pod phục vụ gấp đôi số request. Vẫn bộ trọng số đó, vẫn từng ấy GPU, chất lượng output không đổi. Cuối bài là mô hình thứ hai, <code>misa-ai-2.0</code>, chuyển engine trong cùng đợt kèm một backend attention mới.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -41,7 +41,7 @@
 
 <h2>Người dùng nhận được gì</h2>
 
-<p>Prefill là lúc engine đọc hết input, và người dùng ngồi chờ suốt quãng này. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine quyết định cả thời gian chờ lẫn tốc độ sinh token.</p>
+<p>Prefill là lúc engine đọc hết input, và đây là quãng chờ trước khi có token đầu tiên. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine quyết định cả thời gian chờ lẫn tốc độ sinh token.</p>
 
 <p>Bản mới nhanh hơn ở cả hai, chênh lệch lớn nhất nằm ở prefill.</p>
 
@@ -60,7 +60,7 @@
 
 <figure>
   <img src="img/ch-itl.jpg" alt="Biểu đồ cột nhóm: ở cả năm dải tải, cấu hình mới có ITL median thấp hơn cấu hình cũ">
-  <figcaption><b>Tốc độ decode, xếp theo số request chạy cùng lúc trên một pod.</b> Đo bằng khoảng cách giữa hai token liên tiếp, thấp hơn là token ra đều hơn. Nhanh hơn từ 1,5 đến 1,8 lần, và càng đông người dùng thì khoảng cách giữa hai phiên bản càng giãn. Ở dải đông nhất, 10,3 mili giây xuống 5,8.</figcaption>
+  <figcaption><b>Tốc độ decode, xếp theo số request chạy cùng lúc trên một pod.</b> Đo bằng khoảng cách giữa hai token liên tiếp, thấp hơn là token ra đều hơn. Nhanh hơn từ 1,5 đến 1,8 lần, và tải càng cao thì khoảng cách giữa hai phiên bản càng giãn. Ở dải đông nhất, 10,3 mili giây xuống 5,8.</figcaption>
 </figure>
 
 <div class="col">
@@ -139,7 +139,7 @@
 
 <h2>Chốt lại</h2>
 
-<p>Tóm lại: một lần thay image, thêm vài dòng cấu hình, người dùng chờ ít đi chín lần ở chỗ khó chịu nhất và mỗi pod phục vụ gấp đôi số request. Số liệu production đọc từ Prometheus, cửa sổ sáu ngày, đã chuẩn hoá theo số pod thật của từng workload.</p>
+<p>Tóm lại: một lần thay image, thêm vài dòng cấu hình, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Số liệu production đọc từ Prometheus, cửa sổ sáu ngày, đã chuẩn hoá theo số pod thật của từng workload.</p>
 
 </div>
 
