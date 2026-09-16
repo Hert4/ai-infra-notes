@@ -1,0 +1,22 @@
+posts/nhanh-bay-lan-khong-them-gpu/index.html
+  s_15c8c5d12ce90f::t_7cf168f7533af7 26,31,39,41,43,49,51,53,64,75,77,90,92,94,96,98,111,113,115,126,128,130,138,142,144,157,159,161,174,176,193,195,197,208,210,212,216,218,220,224,236,238,245
+  s_15c8c5d12ce90f::t_0d5aa29da76945 6
+index.html
+  s_15c8c5d12ce90f::t_5350682e42d0e0 6-7,23,41,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "3161ef109a065f29549afccde6d9ef2ef440f9c7",
+  "prompts": {},
+  "sessions": {
+    "s_15c8c5d12ce90f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "020f0432-658b-46ae-842f-e393eee0e19f",
+        "model": "claude-opus-5"
+      },
+      "human_author": "tmduc3 <tmduc3@rd.misa.com.vn>"
+    }
+  }
+}
