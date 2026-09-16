@@ -121,7 +121,7 @@
 
 <p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, tôi chuyển sang sglang trong cùng đợt. Lần này phần việc nặng hơn: trước khi đổi được backend attention, phải sửa chính engine.</p>
 
-<p>sglang có bốn backend attention, và trên H200 thì Gemma 4 chỉ dùng được cái chậm nhất. Lý do nằm ở cấu trúc model: 25 trong 30 layer là sliding-window với head_dim 256, còn 5 layer full-attention chạy ở head_dim 512 vì gộp K với V làm một tensor. Hai backend nhanh nhất chặn cứng head_dim ở 256 nên từ chối thẳng. Backend còn lại nhận được 512 nhưng chưa bao giờ nạp nổi trong image đang dùng.</p>
+<p>sglang có bốn backend attention, và trên H200 thì model này chỉ dùng được cái chậm nhất. Lý do nằm ở cấu trúc model: 25 trong 30 layer là sliding-window với head_dim 256, còn 5 layer full-attention chạy ở head_dim 512 vì gộp K với V làm một tensor. Hai backend nhanh nhất chặn cứng head_dim ở 256 nên từ chối thẳng. Backend còn lại nhận được 512 nhưng chưa bao giờ nạp nổi trong image đang dùng.</p>
 
 </div>
 
@@ -170,7 +170,7 @@
 
 <p>Hai model production đổi engine, không thêm một GPU nào. Với <code>misa-ai-1.1</code>, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Với <code>misa-ai-2.0</code>, chạy lại đúng chuỗi request từng làm sập bản cũ, latency trung bình từ 46,0 xuống 3,2 giây.</p>
 
-<p>Phần việc nằm dưới hai con số đó không phải là sửa cấu hình. Để Gemma 4 chạy được trên backend attention nhanh, phải vá chính engine, gồm một bản vá lấy từ PR upstream chưa merge và một bản tự viết sau khi đo chữ ký hàm thật thay vì tin vào cách thư viện đoán. Để biết chia bộ nhớ GPU thế nào cho đúng, phải đo tải thật rồi mới dời ranh giới. Và để biết flag nào thực sự có công, phải đếm trong gần sáu triệu request xem có bao nhiêu cái chạm được ngưỡng kích hoạt của chính flag đó.</p>
+<p>Phần việc nằm dưới hai con số đó không phải là sửa cấu hình. Để <code>misa-ai-2.0</code> chạy được trên backend attention nhanh, phải vá chính engine, gồm một bản vá lấy từ PR upstream chưa merge và một bản tự viết sau khi đo chữ ký hàm thật thay vì tin vào cách thư viện đoán. Để biết chia bộ nhớ GPU thế nào cho đúng, phải đo tải thật rồi mới dời ranh giới. Và để biết flag nào thực sự có công, phải đếm trong gần sáu triệu request xem có bao nhiêu cái chạm được ngưỡng kích hoạt của chính flag đó.</p>
 
 <p>Cụm GPU của bạn nhiều khả năng cũng đang chạy dưới sức của nó. Hãy đẩy sản phẩm tới giới hạn mới và cho tôi biết chỗ nào còn nghẽn.</p>
 
