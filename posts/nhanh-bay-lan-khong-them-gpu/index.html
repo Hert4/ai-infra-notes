@@ -102,7 +102,7 @@
 
 <h2>Tốc độ đến từ đâu</h2>
 
-<p>Nghi phạm đầu tiên là nhóm flag sparse prefill. Kernel viết cho context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín tới mức tôi suýt viết luôn vào báo cáo. Trước khi ghi công, tôi đi kiểm một điều: nó chỉ chạy khi KV cache của một request vượt 95.000 token. Còn prompt thật của workload này thì dài bao nhiêu?</p>
+<p>Nghi phạm đầu tiên là nhóm flag sparse prefill: kernel viết cho context rất dài, bật lên thì prefill nhanh. Nhưng nó chỉ chạy khi KV cache của một request vượt 95.000 token. Còn prompt thật của workload này dài bao nhiêu?</p>
 
 </div>
 
