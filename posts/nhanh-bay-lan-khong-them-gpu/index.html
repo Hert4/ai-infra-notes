@@ -202,24 +202,6 @@
 
 <p>ITL median thì thắng dưới cả hai cách ghép tải, kể cả cách bất lợi cho bản mới. Con số đó tôi tin.</p>
 
-<h2>Một lần báo động giả</h2>
-
-<p>Giữa lúc đang đo, dashboard Grafana của một workload khác tụt xuống 0% hiệu suất. Panel refresh 5 giây một lần, nhìn rất giống sự cố thật.</p>
-
-<p>Công thức của panel là số request đang chạy chia cho tổng đang chạy và đang chờ, cộng một epsilon nhỏ ở mẫu để khỏi chia cho 0. Lúc rảnh hoàn toàn nó trả về 100%. Muốn xuống 0% thì phải có request nằm chờ trong khi không có request nào đang chạy. Prometheus chụp trúng đúng trạng thái đó trong một nhịp scrape, rồi treo nguyên suốt một phút.</p>
-
-<p>Quét lại cả tuần thì thấy đúng 9 trên 10.080 điểm đo rơi xuống dưới ngưỡng đỏ, mỗi điểm gói gọn trong một phút. Không request nào bị abort trong các phút đó, độ trễ không nhúc nhích so với hai phút liền kề, và không pod nào restart trong bốn ngày trước đó. Model không hề có sự cố; công thức của panel mới là thứ cần sửa.</p>
-
-<p>Metric production không phải lúc nào cũng đo thứ mà tên của nó gợi ra. Trước khi kết luận về hiệu năng, kiểm luôn định nghĩa metric, đơn vị, sampling window và trạng thái workload lúc đó.</p>
-
-<h2>Còn bỏ ngỏ</h2>
-
-<ul class="plain">
-  <li><strong>ITL p99 ở tải cực hạn.</strong> Cần một benchmark có kiểm soát, không phải thêm dữ liệu quan sát.</li>
-  <li><strong>Một model multimodal 26 tỷ tham số cũng vừa đổi engine, nhưng số liệu chưa dùng được.</strong> Phía engine cũ chỉ có một tới bốn giờ mẫu mỗi dải tải, và 23% request của nó có kèm ảnh, gần như ảnh mới mỗi lần, nên TTFT đo ra phần lớn là thời gian encode ảnh. Con số duy nhất đứng vững ở đó là thời gian nằm trong hàng đợi, từ 0,297 xuống 0,005 giây.</li>
-  <li><strong>Tỷ lệ abort 1,85% trên phiên bản mới.</strong> Đều đặn từ ngày đầu, bám theo lưu lượng, không kèm tăng latency. Giống client tự ngắt hơn là engine hỏng, nhưng chưa chứng minh được từ phía engine.</li>
-</ul>
-
 <h2>Chốt lại</h2>
 
 <p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
