@@ -39,7 +39,7 @@
 
 <p>Đầu tháng 9 tôi chuyển nó sang một bản SGLang mới hơn kèm cấu hình attention khác. Mọi thứ còn lại giữ nguyên: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp, và cả hai bản đều không bật speculative decoding. Vậy nên chênh lệch đo được là do engine, không phải do phần cứng hay model.</p>
 
-<h2>Người dùng nhận được gì</h2>
+<h2>Kết quả trên traffic thật</h2>
 
 <p>Prefill là lúc engine đọc hết input, và đây là quãng chờ trước khi có token đầu tiên. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine quyết định cả thời gian chờ lẫn tốc độ sinh token.</p>
 
@@ -60,7 +60,7 @@
 
 <figure>
   <img src="img/ch-itl.jpg" alt="Biểu đồ cột nhóm: ở cả năm dải tải, cấu hình mới có ITL median thấp hơn cấu hình cũ">
-  <figcaption><b>Tốc độ decode, xếp theo số request chạy cùng lúc trên một pod.</b> Đo bằng khoảng cách giữa hai token liên tiếp, thấp hơn là token ra đều hơn. Nhanh hơn từ 1,5 đến 1,8 lần, và tải càng cao thì khoảng cách giữa hai phiên bản càng giãn. Ở dải đông nhất, 10,3 mili giây xuống 5,8.</figcaption>
+  <figcaption><b>Tốc độ decode, xếp theo số request chạy cùng lúc trên một pod.</b> Đo bằng khoảng cách giữa hai token liên tiếp, thấp hơn là token ra đều hơn. Nhanh hơn từ 1,5 đến 1,8 lần, và tải càng cao thì khoảng cách giữa hai phiên bản càng giãn. Ở dải tải cao nhất, 10,3 mili giây xuống 5,8.</figcaption>
 </figure>
 
 <div class="col">
