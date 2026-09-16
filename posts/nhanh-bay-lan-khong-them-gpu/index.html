@@ -133,7 +133,7 @@
 <div class="col">
 
 
-<p>Tôi viết hai bản vá để gỡ chỗ đó. Bản thứ nhất sửa kernel chậm: nó đặt cứng số khối K/V được chở song song với việc tính là một, tức chở một khối, chờ về, tính xong rồi mới chở khối sau, và suốt lúc chờ thì phần tính của GPU ngồi không. Khối ở head_dim 512 nặng gấp đôi nên khoảng ngồi không cũng dài gấp đôi. Bản vá cho kernel chọn số khối theo head_dim thay vì đặt cứng.</p>
+<p>Hai bản vá gỡ chỗ đó. Bản thứ nhất lấy từ một PR upstream chưa được merge, sửa kernel chậm: nó đặt cứng số khối K/V được chở song song với việc tính là một, tức chở một khối, chờ về, tính xong rồi mới chở khối sau, và suốt lúc chờ thì phần tính của GPU ngồi không. Khối ở head_dim 512 nặng gấp đôi nên khoảng ngồi không cũng dài gấp đôi. Bản vá cho kernel chọn số khối theo head_dim thay vì đặt cứng.</p>
 
 </div>
 
@@ -145,7 +145,7 @@
 <div class="col">
 
 
-<p>Bản thứ hai làm cho backend nhanh nạp được. Thư viện flash-attn có nhiều phiên bản giao diện hàm, và thay vì hỏi thẳng bản đang cài, nó đoán theo biến môi trường <code>CUDA_VERSION</code>. Trên image này nó đoán sai, gọi hàm sai kiểu, và mọi model head_dim lớn vỡ ngay ở bước dựng CUDA graph, không cờ nào né được. Bản vá bỏ phần đoán, đọc thẳng chữ ký hàm thật.</p>
+<p>Bản thứ hai tôi tự viết, để backend nhanh nạp được. Thư viện flash-attn có nhiều phiên bản giao diện hàm, và thay vì hỏi thẳng bản đang cài, nó đoán theo biến môi trường <code>CUDA_VERSION</code>. Trên image này nó đoán sai, gọi hàm sai kiểu, và mọi model head_dim lớn vỡ ngay ở bước dựng CUDA graph, không cờ nào né được. Bản vá bỏ phần đoán, đọc thẳng chữ ký hàm thật.</p>
 
 <p>Sau hai bản vá, model chạy được trên backend nhanh, và CompactAttention dựng tiếp trên nền đó. Thay vì quét toàn bộ prefix ở mỗi bước, CompactAttention chia prefix thành từng khối rồi chỉ giữ lại các khối quan trọng nhất, và chỉ bật khi prefix vượt 8.192 token. Kết quả trực tiếp: đọc 152.000 token trong 9,6 giây.</p>
 
@@ -168,9 +168,11 @@
 
 <h2>Tóm lại</h2>
 
-<p>Một lần thay image, thêm vài dòng cấu hình, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Toàn bộ số liệu lấy từ traffic thật trong sáu ngày, và đã chia lại theo đúng số pod mà mỗi bản đang chạy.</p>
+<p>Hai model production đổi engine, không thêm một GPU nào. Với <code>misa-ai-1.1</code>, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Với <code>misa-ai-2.0</code>, chạy lại đúng chuỗi request từng làm sập bản cũ, latency trung bình từ 46,0 xuống 3,2 giây.</p>
 
-<p>Nhưng thứ đáng nhớ không phải con số bảy lần. Cả hai lần nhanh lên đều đến từ chỗ không ai nhìn vào: một dòng khai báo backend bị bỏ quên, và một ranh giới chia bộ nhớ đặt sai chỗ. Phần cứng chưa bao giờ là thứ chặn đường.</p>
+<p>Phần việc nằm dưới hai con số đó không phải là sửa cấu hình. Để Gemma 4 chạy được trên backend attention nhanh, phải vá chính engine, gồm một bản vá lấy từ PR upstream chưa merge và một bản tự viết sau khi đo chữ ký hàm thật thay vì tin vào cách thư viện đoán. Để biết chia bộ nhớ GPU thế nào cho đúng, phải đo tải thật rồi mới dời ranh giới. Và để biết flag nào thực sự có công, phải đếm trong gần sáu triệu request xem có bao nhiêu cái chạm ngưỡng kích hoạt. Đáp số là sáu mươi.</p>
+
+<p>Thứ đáng nhớ không phải con số bảy lần. Cả hai lần nhanh lên đều đến từ chỗ không ai nhìn vào: một dòng khai báo backend bị bỏ quên, và một ranh giới chia bộ nhớ đặt sai chỗ. Phần cứng chưa bao giờ là thứ chặn đường.</p>
 
 <p>Cụm GPU của bạn nhiều khả năng cũng đang chạy dưới sức của nó. Hãy đẩy sản phẩm tới giới hạn mới và cho tôi biết chỗ nào còn nghẽn.</p>
 
