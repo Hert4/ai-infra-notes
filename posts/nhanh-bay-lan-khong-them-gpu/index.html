@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nhanh bảy lần, không thêm GPU · MISA AI Platform</title>
-<meta name="description" content="Đổi engine cho một model 35 tỷ tham số đang chạy production: prefill nhanh hơn bảy lần, cùng thẻ GPU, cùng trọng số.">
+<meta name="description" content="Đổi engine cho một model 35 tỷ tham số đang chạy production: prefill nhanh hơn bảy lần, cùng số GPU, cùng trọng số.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -23,12 +23,12 @@
   <p class="eyebrow">Hạ tầng suy luận</p>
   <h1>Nhanh bảy lần, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead"><code>misa-ai-1.1</code> đang chạy production được chuyển sang engine mới. Cùng bộ trọng số, cùng thẻ GPU, chất lượng câu trả lời không đổi. Sáu ngày traffic thật sau đó: prefill nhanh hơn bảy lần, người dùng chờ ít đi gần chín lần, mỗi thẻ gánh gấp đôi số request. Bài này đưa ra các con số, chỉ ra tốc độ đó thực sự đến từ đâu, và kể lại ba lần tôi phải tự bác bỏ mình trước khi dám tin chúng.</p>
+  <p class="lead"><code>misa-ai-1.1</code> đang chạy production được chuyển sang engine mới. Cùng bộ trọng số, cùng số GPU, chất lượng câu trả lời không đổi. Sáu ngày traffic thật sau đó: prefill nhanh hơn bảy lần, người dùng chờ ít đi gần chín lần, mỗi GPU gánh gấp đôi số request. Bài này đưa ra các con số, chỉ ra tốc độ đó thực sự đến từ đâu, và kể lại ba lần tôi phải tự bác bỏ mình trước khi dám tin chúng.</p>
 </header>
 
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
-  <figcaption>Với mỗi câu hỏi, máy làm hai việc nối nhau và cả hai đều dùng chung một con GPU. Việc thứ nhất là đọc hết câu hỏi. Đây là lúc người dùng ngồi chờ, chưa nhìn thấy chữ nào. Việc thứ hai là viết câu trả lời ra từng chữ. Phiên bản mới làm nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở việc thứ nhất.</figcaption>
+  <figcaption>Mỗi request đi qua hai giai đoạn nối nhau và cả hai đều dùng chung một GPU. Giai đoạn đầu là đọc hết prompt. Đây là lúc người dùng ngồi chờ, chưa nhận được token nào. Giai đoạn sau là sinh câu trả lời ra từng token. Phiên bản mới nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở giai đoạn đầu.</figcaption>
 </figure>
 
 <main>
@@ -36,7 +36,7 @@
 
 <h2>Đổi engine, giữ nguyên mọi thứ khác</h2>
 
-<p><code>misa-ai-1.1</code> phục vụ người dùng thật trên cụm nội bộ, mỗi ngày khoảng một triệu lượt hỏi. Về kỹ thuật: MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8. Ba đặc điểm này sẽ quay lại ở phần giải thích nguyên nhân.</p>
+<p><code>misa-ai-1.1</code> phục vụ người dùng thật trên cụm nội bộ, mỗi ngày khoảng một triệu request. Về kỹ thuật: MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8. Ba đặc điểm này sẽ quay lại ở phần giải thích nguyên nhân.</p>
 
 <p>Đầu tháng 9 tôi chuyển nó sang một bản SGLang mới hơn kèm cấu hình attention khác. Mọi thứ còn lại giữ nguyên: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp. Cả hai bản đều không bật speculative decoding.</p>
 
@@ -46,9 +46,9 @@
 
 <h2>Người dùng được hưởng lợi gì?</h2>
 
-<p>Mỗi request đi qua hai giai đoạn, và chúng tác động lên trải nghiệm theo hai cách khác nhau.</p>
+<p>Hai giai đoạn đó tác động lên trải nghiệm theo hai cách khác nhau.</p>
 
-<p>Prefill là lúc máy đọc hết input. Người dùng ngồi chờ suốt quãng này, chưa thấy chữ nào. Decode là lúc model viết câu trả lời ra từng token. Hai giai đoạn giành nhau cùng một con GPU, nên engine ảnh hưởng thẳng tới cả thời gian chờ ban đầu lẫn tốc độ chữ chạy.</p>
+<p>Prefill là lúc engine đọc hết input. Người dùng ngồi chờ suốt quãng này, chưa nhận được token nào. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine ảnh hưởng thẳng tới cả thời gian chờ ban đầu lẫn tốc độ sinh token.</p>
 
 <p>Bản mới nhanh hơn ở cả hai. Prefill là chỗ nó thắng đậm.</p>
 
@@ -56,7 +56,7 @@
 
 <figure>
   <img src="img/ch-prefill.jpg" alt="Biểu đồ cột ngang: cấu hình cũ 3.555 token mỗi giây, cấu hình mới 25.927 token mỗi giây">
-  <figcaption><b>Tốc độ prefill.</b> Số token phải prefill thật, tức không lấy lại được từ cache, chia cho thời gian chờ tới token đầu tiên. Sáu ngày chạy thật. Thời gian chờ token đầu tiên từ 0,879 giây xuống 0,098 giây. Phép so này còn thiệt cho phiên bản mới: nó dùng lại được ít cache hơn, 35,3% so với 40,2%, tức phải đọc nhiều token hơn cho mỗi câu hỏi mà vẫn xong sớm hơn.</figcaption>
+  <figcaption><b>Tốc độ prefill.</b> Số token phải prefill thật, tức không lấy lại được từ cache, chia cho thời gian chờ tới token đầu tiên. Sáu ngày chạy thật. Thời gian chờ token đầu tiên từ 0,879 giây xuống 0,098 giây. Phép so này còn thiệt cho phiên bản mới: nó dùng lại được ít cache hơn, 35,3% so với 40,2%, tức phải prefill nhiều token hơn cho mỗi request mà vẫn xong sớm hơn.</figcaption>
 </figure>
 
 <div class="col">
@@ -67,7 +67,7 @@
 
 <figure>
   <img src="img/ch-itl.jpg" alt="Biểu đồ cột nhóm: ở cả năm dải tải, cấu hình mới có ITL median thấp hơn cấu hình cũ">
-  <figcaption><b>Tốc độ decode, xếp theo số request chạy cùng lúc trên một pod.</b> Đo bằng khoảng cách giữa hai token liên tiếp, thấp hơn là chữ chạy mượt hơn. Nhanh hơn từ 1,5 đến 1,8 lần, và càng đông người dùng thì khoảng cách giữa hai phiên bản càng giãn. Ở dải đông nhất, 10,3 mili giây xuống 5,8.</figcaption>
+  <figcaption><b>Tốc độ decode, xếp theo số request chạy cùng lúc trên một pod.</b> Đo bằng khoảng cách giữa hai token liên tiếp, thấp hơn là token ra đều hơn. Nhanh hơn từ 1,5 đến 1,8 lần, và càng đông người dùng thì khoảng cách giữa hai phiên bản càng giãn. Ở dải đông nhất, 10,3 mili giây xuống 5,8.</figcaption>
 </figure>
 
 <div class="col">
@@ -80,7 +80,7 @@
 
 <figure>
   <img src="img/capacity.jpg" alt="Hai thanh ray dài bằng nhau: thanh trên lấp đầy bởi năm khối dài, thanh dưới lấp đầy bởi mười một khối ngắn hơn">
-  <figcaption>Một thẻ GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Request nào xong sớm thì trả chỗ sớm, nên cùng khoảng thời gian đó phục vụ được nhiều người hơn: 88 nghìn lên 194 nghìn request mỗi ngày trên mỗi pod, không mua thêm card nào, không đổi model, không đổi chất lượng câu trả lời.</figcaption>
+  <figcaption>Một GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Request nào xong sớm thì trả chỗ sớm, nên cùng khoảng thời gian đó phục vụ được nhiều request hơn: 88 nghìn lên 194 nghìn mỗi ngày trên mỗi pod, không thêm GPU, không đổi model, không đổi chất lượng output.</figcaption>
 </figure>
 
 <div class="col">
@@ -91,7 +91,7 @@
 
 <p>Thứ nhất, nâng container image. Bản cũ chạy từ đầu tháng 7, bản mới ra đầu tháng 9, cách nhau khoảng hai tháng phát triển upstream.</p>
 
-<p>Thứ hai, bật prefill backend dành riêng cho lớp linear-attention. Model là kiến trúc hybrid, phần lớn layer dùng linear attention. Cấu hình cũ không khai báo backend cho nhóm này nên chúng chạy bằng cách tính mặc định, vốn viết cho kiểu attention khác và chậm hơn hẳn ở đây.</p>
+<p>Thứ hai, bật prefill backend dành riêng cho lớp linear-attention. Model là kiến trúc hybrid, phần lớn layer dùng linear attention. Cấu hình cũ không khai báo backend cho nhóm này nên chúng chạy bằng kernel mặc định, vốn viết cho kiểu attention khác và chậm hơn hẳn ở đây.</p>
 
 <p>Thứ ba, bật nhóm sparse prefill kernel cho lớp full-attention. Kernel này sinh ra cho prompt context rất dài, và nó có một ngưỡng kích hoạt theo độ dài KV cache.</p>
 
@@ -101,7 +101,7 @@
 
 <figure>
   <img src="img/routes.jpg" alt="Một dòng chảy tách thành hai nhánh: nhánh trên rộng và mở, toàn bộ nước chảy qua đó; nhánh dưới bị một cửa cống đóng chặn lại, lòng kênh phía sau khô nứt nẻ">
-  <figcaption>Nhóm kernel thứ ba chỉ chạy khi một request dài hơn 95.000 token, mà loại request đó gần như không xuất hiện, nên nó gần như không bao giờ được gọi. Ngược lại, các layer linear-attention nằm trên đường đi của mọi request, dài hay ngắn đều phải qua, nên đổi cách tính ở đó là đổi cho toàn bộ traffic.</figcaption>
+  <figcaption>Nhóm kernel thứ ba chỉ chạy khi một request dài hơn 95.000 token, mà loại request đó gần như không xuất hiện, nên nó gần như không bao giờ được gọi. Ngược lại, các layer linear-attention nằm trên đường đi của mọi request, dài hay ngắn đều phải qua, nên đổi kernel ở đó là đổi cho toàn bộ traffic.</figcaption>
 </figure>
 
 <div class="col">
@@ -147,7 +147,7 @@
 
 <figure>
   <img src="img/counter.jpg" alt="Băng chuyền hai làn: làn trên mỗi khay một quả, làn dưới mỗi khay ba quả, cả hai đều bị một cánh tay đếm gõ theo khay">
-  <figcaption>Khi bật spec decode, mỗi gói tin gửi về chứa trung bình 2,4 token chứ không phải một. Script đếm số gói tin rồi ghi thành số token, nên một câu trả lời 300 token về trong 124 gói bị ghi là 124 token, nhỏ hơn thực tế 2,4 lần.</figcaption>
+  <figcaption>Khi bật spec decode, mỗi chunk SSE chở trung bình 2,4 token chứ không phải một. Script đếm chunk rồi ghi thành số token, nên một response 300 token về trong 124 chunk bị ghi là 124, nhỏ hơn thực tế 2,4 lần.</figcaption>
 </figure>
 
 <div class="col">
@@ -171,9 +171,9 @@
 
 <h3>Lần thứ ba: cố định sai biến khi đánh giá ITL</h3>
 
-<p>Câu hỏi còn lại: tải cao thì bản mới có chậm decode hơn không? Phải nhìn phần đuôi chứ không nhìn trung bình, tức nhóm 1% request xui nhất, thường gọi là p99. Trung bình đẹp mà đuôi xấu thì vẫn có người phải ngồi chờ lâu bất thường.</p>
+<p>Câu hỏi còn lại: tải cao thì bản mới có chậm decode hơn không? Phải nhìn p99 chứ không nhìn trung vị. P99 là mốc mà 99% request nằm dưới, tức phần đuôi gồm 1% request xui nhất. Trung vị đẹp mà p99 xấu thì vẫn có người phải ngồi chờ lâu bất thường.</p>
 
-<p>Tôi giữ cố định số request chạy cùng lúc trên mỗi pod rồi so độ trễ đuôi của decode. Dải tải cao nhất ra 32,9 ms so với 180,8 ms, và tôi viết luôn câu kết luận.</p>
+<p>Tôi giữ cố định số request chạy cùng lúc trên mỗi pod rồi so ITL p99. Dải tải cao nhất ra 32,9 ms so với 180,8 ms, và tôi viết luôn câu kết luận.</p>
 
 </div>
 
@@ -200,7 +200,7 @@
 
 <figure>
   <img src="img/ch-p99.jpg" alt="Biểu đồ đường: ở mọi mức tải mà cả hai phiên bản cùng có dữ liệu, đường của cấu hình mới nằm thấp hơn cấu hình cũ">
-  <figcaption><b>Độ trễ đuôi của decode, xếp theo tốc độ prefill mà mỗi pod đang gánh.</b> Trục ngang là số token prefill mỗi giây trên mỗi pod, tức phần công việc thật sự đang đè lên GPU. Ở mọi mức tải mà cả hai phiên bản cùng có dữ liệu, phiên bản mới nằm thấp hơn. Vùng xám bên phải là nơi phiên bản cũ không có điểm đo nào để đối chiếu: nó chưa bao giờ phải gánh mức tải mà phiên bản mới đang gánh hằng ngày.</figcaption>
+  <figcaption><b>ITL p99 của decode, xếp theo tốc độ prefill mà mỗi pod đang gánh.</b> Trục ngang là số token prefill mỗi giây trên mỗi pod, tức phần công việc thật sự đang đè lên GPU. Ở mọi mức tải mà cả hai phiên bản cùng có dữ liệu, phiên bản mới nằm thấp hơn. Vùng xám bên phải là nơi phiên bản cũ không có điểm đo nào để đối chiếu: nó chưa bao giờ phải gánh mức tải mà phiên bản mới đang gánh hằng ngày.</figcaption>
 </figure>
 
 <div class="col">
@@ -233,7 +233,7 @@
 
 <h2>Điều đáng mang đi</h2>
 
-<p>Cùng thẻ GPU, cùng model, cùng chất lượng đầu ra. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
+<p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
 
 <p>Chi phí thật nằm chỗ khác: bốn ngày đo đạc và ba kết luận sai phải rút lại, cả ba hóa ra là một bài học đội ba lốt. Khi so hai hệ thống đang nhận tải khác nhau, thứ phải giữ cố định là thứ thực sự sinh ra chi phí. Và mọi bảng số phải in kèm số giờ mẫu cùng mức tải trung vị của từng dải, thiếu hai cột đó thì bảng nào nhìn cũng thuyết phục ngang nhau.</p>
 
