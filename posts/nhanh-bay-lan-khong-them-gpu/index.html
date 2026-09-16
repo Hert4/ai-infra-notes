@@ -77,13 +77,15 @@
 
 <p><b>Hai, cho lớp linear-attention một kernel đọc prompt viết riêng.</b> Model là kiến trúc hybrid, phần lớn layer dùng linear attention, nhưng cấu hình cũ không khai báo backend cho nhóm này nên chúng chạy bằng kernel chung, vốn viết cho kiểu attention khác. Kernel mới viết đúng cho loại layer đó, và với prompt rất dài thì được phép bỏ qua phần không cần đọc lại.</p>
 
-<p><b>Ba, chia lại bộ nhớ GPU.</b> Model cần hai loại bộ nhớ: một loại lớn dần theo độ dài prompt, một loại cố định cho mỗi request. Engine chia GPU cho hai loại theo một tỉ lệ mặc định, mà với tải thật của MISA thì tỉ lệ đó lệch: loại thứ nhất thừa chỗ, loại thứ hai cạn sạch. Request phải xếp hàng trong khi GPU vẫn còn trống. Nhìn biểu đồ thì tưởng hết tài nguyên, thực ra là chia sai. Chia lại theo số đo thật, giữ nguyên độ dài context, không đánh đổi gì.</p>
+<p><b>Ba, chia lại bộ nhớ GPU.</b> Model hybrid này cần hai vùng nhớ khác hẳn nhau. Vùng thứ nhất là KV cache, tốn khoảng 20 KB cho mỗi token, nên nó lớn dần theo độ dài prompt. Vùng thứ hai giữ trạng thái của 30 layer linear-attention, tốn khoảng 63 MB cho mỗi request đang chạy, và con số đó cố định dù prompt dài hay ngắn.</p>
+
+<p>Engine chia bộ nhớ GPU cho hai vùng theo một tỉ lệ mặc định. Với tải của MISA, thứ đẩy tới giới hạn là số request chạy song song chứ không phải độ dài prompt, nên vùng 63 MB cạn trước trong khi KV cache còn thừa chỗ. Request mới phải xếp hàng dù GPU vẫn còn bộ nhớ trống. Dời ranh giới theo số đo thật thì cả hai vùng cùng dùng hết, và độ dài context giữ nguyên.</p>
 
 </div>
 
 <figure>
   <img src="img/mech-memory.jpg" alt="Sơ đồ: cùng một dải bộ nhớ GPU, cách chia mặc định để trống một mảng lớn ở pool lớn dần theo prompt trong khi pool cố định mỗi request đã cạn và request phải xếp hàng; chia lại thì cả hai pool đều dùng hết và không còn xếp hàng">
-  <figcaption><b>Cùng một dải bộ nhớ GPU, hai cách chia.</b> Tỉ lệ mặc định để trống một mảng lớn ở loại lớn dần theo prompt, trong khi loại cố định cho mỗi request đã cạn, nên request phải xếp hàng dù GPU còn chỗ. Dời ranh giới theo số đo thật thì cả hai đều dùng hết.</figcaption>
+  <figcaption><b>Cùng một dải bộ nhớ GPU, hai cách chia.</b> Tỉ lệ mặc định để trống một mảng lớn trong KV cache, trong khi vùng trạng thái linear-attention đã cạn. Số request chạy song song bị chặn bởi vùng cạn đó, nên request mới phải chờ dù GPU vẫn còn bộ nhớ trống.</figcaption>
 </figure>
 
 <div class="col">
