@@ -49,7 +49,7 @@
 
 <figure>
   <img src="img/ch-prefill.jpg" alt="Biểu đồ cột ngang: cấu hình cũ 3.555 token mỗi giây, cấu hình mới 25.927 token mỗi giây">
-  <figcaption><b>Tốc độ prefill.</b> Số token phải prefill thật chia cho thời gian chờ tới token đầu tiên, sáu ngày traffic production. Thời gian chờ token đầu tiên: 0,879 giây xuống 0,098 giây. Phép so còn thiệt cho bản mới, vì nó dùng lại được ít cache hơn (35,3% so với 40,2%) mà vẫn xong sớm hơn.</figcaption>
+  <figcaption><b>Tốc độ prefill.</b> Số token phải prefill thật chia cho thời gian chờ tới token đầu tiên, đo trong sáu ngày chạy thật. Thời gian chờ token đầu tiên: 0,879 giây xuống 0,098 giây. Phép so này còn thiệt cho bản mới, vì nó dùng lại được ít cache hơn (35,3% so với 40,2%) mà vẫn xong sớm hơn.</figcaption>
 </figure>
 
 <div class="col">
@@ -65,7 +65,7 @@
 
 <div class="col">
 
-<p>Ghép lại theo median production, một response 300 token đi từ 2,8 xuống 1,2 giây. Quãng chờ trước token đầu tiên: 0,88 xuống 0,10 giây. Thời gian nằm hàng đợi: 0,099 xuống 0,005 giây.</p>
+<p>Tính theo mức trung vị đo được, một response 300 token đi từ 2,8 xuống 1,2 giây. Quãng chờ trước token đầu tiên: 0,88 xuống 0,10 giây. Thời gian nằm hàng đợi: 0,099 xuống 0,005 giây.</p>
 
 <p>Request hoàn tất sớm thì giải phóng GPU sớm, nên cùng một pod phục vụ được 194 nghìn request mỗi ngày thay vì 88 nghìn.</p>
 
@@ -73,7 +73,7 @@
 
 <figure>
   <img src="img/capacity.jpg" alt="Hai thanh ray dài bằng nhau: thanh trên lấp đầy bởi năm khối dài, thanh dưới lấp đầy bởi mười một khối ngắn hơn">
-  <figcaption>Một GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Khối càng ngắn thì xếp được càng nhiều, và không có GPU nào được thêm vào.</figcaption>
+  <figcaption>Một GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Request hoàn tất càng sớm thì chỗ trống nhường lại cho request sau càng nhiều.</figcaption>
 </figure>
 
 <div class="col">
@@ -107,47 +107,47 @@
 
 <figure>
   <img src="img/ch-threshold.jpg" alt="Thang log: toàn bộ dải p50 tới p99,9 của prompt nằm dưới 33.270 token, còn ngưỡng bật sparse prefill là 95.000 token">
-  <figcaption><b>Độ dài prompt thực tế, so với ngưỡng để sparse prefill chịu chạy.</b> Trục ngang chia theo thang log, mỗi vạch là gấp mười lần vạch trước. 5.852.014 request trong sáu ngày. Thanh xanh phủ từ mức giữa (2.400 token) tới mức 99,9% (33.270 token). Chỉ 60 request chạm được ngưỡng 95.000, tức 0,001%.</figcaption>
+  <figcaption><b>Độ dài prompt thực tế, so với ngưỡng để sparse prefill chịu chạy.</b> Trục ngang mỗi vạch gấp mười lần vạch trước. 5.852.014 request trong sáu ngày. Thanh xanh trải từ mức giữa (2.400 token) tới mức 99,9% (33.270 token). Chỉ 60 request chạm được ngưỡng 95.000, tức 0,001%.</figcaption>
 </figure>
 
 <div class="col">
 
 <p>Sáu ngày, gần sáu triệu request, đúng 60 cái chạm ngưỡng. Sparse prefill gần như chưa bao giờ chạy, và toàn bộ mức tăng prefill thuộc về nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
 
-<p>Quy sai nguyên nhân thì lần sau người ta sẽ bê nguyên bộ flag sparse-prefill sang một model full-attention, mà ở đó nó chẳng bao giờ được kích hoạt. Ai định mang bộ flag này sang model khác, đọc lại đoạn ngưỡng 95.000 token trước đã. Chọn cấu hình serving theo kiến trúc model và kiểu tải thật, đừng đếm xem bật được bao nhiêu flag.</p>
+<p>Quy sai nguyên nhân thì lần sau cả bộ flag sparse-prefill sẽ được áp thẳng sang một model full-attention, mà ở đó nó không bao giờ chạy. Ai định mang bộ flag này sang model khác, đọc lại đoạn ngưỡng 95.000 token trước đã. Chọn cấu hình serving theo kiến trúc model và kiểu tải thật, đừng đếm xem bật được bao nhiêu flag.</p>
 
 <h2>Cùng đợt đó, misa-ai-2.0</h2>
 
 <p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, chuyển sang sglang trong cùng đợt. Lần này không chỉ đổi engine: bản mới chạy trên CompactAttention thay vì đường attention mặc định. Thay vì quét toàn bộ prefix ở mỗi bước, nó chia prefix thành từng khối rồi chỉ giữ lại các khối quan trọng nhất, và chỉ bật khi prefix vượt 8.192 token.</p>
 
-<p>Không phải thấy nhanh hơn là chuyển ngay. Cuối tháng 8, một bàn đo riêng trên 1×H200 với prompt 27,6 nghìn token không cache cho thấy sglang nhanh hơn vLLM 1,15 lần, thêm ba bản vá kernel thì lên 1,27 lần. Chưa đủ để đánh đổi một lần chuyển production.</p>
+<p>Không phải thấy nhanh hơn là chuyển ngay. Cuối tháng 8, một lượt đo riêng trên 1×H200 với prompt 27,6 nghìn token không dùng lại cache cho thấy sglang nhanh hơn vLLM 1,15 lần, thêm ba bản vá kernel thì lên 1,27 lần. Chưa đủ để đánh đổi một lần chuyển production.</p>
 
-<p>Phép thử quyết định là phát lại đúng phổ tải của sự cố ngày 4 tháng 9, ép nhanh gấp 2,5 lần so với lúc nó xảy ra thật.</p>
+<p>Phép thử quyết định là chạy lại đúng chuỗi request của sự cố ngày 4 tháng 9, nhưng ép nhanh gấp 2,5 lần so với lúc nó xảy ra thật.</p>
 
 </div>
 
 <figure>
-  <img src="img/ch-replay.jpg" alt="Biểu đồ cột ngang: vLLM 46,0 giây, sglang 3,2 giây độ trễ trung bình trên cùng một phổ tải">
-  <figcaption><b>Phát lại phổ tải sự cố ngày 4 tháng 9, ép nhanh gấp 2,5 lần.</b> Cùng phần cứng, cùng chuỗi request, chỉ khác engine và backend attention. Độ trễ trung bình 46,0 giây xuống 3,2 giây. Không chỉ nhanh hơn, bản mới còn xử lý thêm 24% request mỗi phút.</figcaption>
+  <img src="img/ch-replay.jpg" alt="Biểu đồ cột ngang: vLLM 46,0 giây, sglang 3,2 giây độ trễ trung bình trên cùng một chuỗi request">
+  <figcaption><b>Chạy lại chuỗi request của sự cố ngày 4 tháng 9, ép nhanh gấp 2,5 lần.</b> Cùng phần cứng, cùng chuỗi request, chỉ khác engine và backend attention. Độ trễ trung bình 46,0 giây xuống 3,2 giây. Không chỉ nhanh hơn, bản mới còn xử lý thêm 24% request mỗi phút.</figcaption>
 </figure>
 
 <div class="col">
 
-<p>Lên production, hàng đợi cũng giảm y như trên bàn đo: chờ tới lượt từ 0,297 giây xuống 0,005 giây.</p>
+<p>Lên production, hàng đợi giảm đúng như lúc đo thử: thời gian chờ tới lượt từ 0,297 giây xuống 0,005 giây.</p>
 
-<p>Ba workload cùng phục vụ bộ trọng số đó đều khai <code>served-model-name</code> giống hệt nhau, nhưng mỗi cái một api-key. Gateway vì thế rót cho chúng ba luồng traffic khác hẳn nhau, input trung bình 10.159, 8.714 và 14.272 token. Bản mới đang xử lý lượng prefill gấp mười lần bản cũ, 1.350 so với 126 token mỗi pod mỗi giây, mà hàng đợi vẫn gần như trống.</p>
+<p>Ba workload cùng phục vụ bộ trọng số đó đều khai <code>served-model-name</code> giống hệt nhau, nhưng mỗi cái một api-key. Gateway vì thế chia cho chúng ba luồng traffic khác hẳn nhau, input trung bình 10.159, 8.714 và 14.272 token. Bản mới đang xử lý lượng prefill gấp mười lần bản cũ, 1.350 so với 126 token mỗi pod mỗi giây, mà hàng đợi vẫn gần như trống.</p>
 
-<h2>Chốt lại</h2>
+<h2>Tóm lại</h2>
 
-<p>Tóm lại: một lần thay image, thêm vài dòng cấu hình, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Số liệu production đọc từ Prometheus, cửa sổ sáu ngày, đã chuẩn hoá theo số pod thật của từng workload.</p>
+<p>Một lần thay image, thêm vài dòng cấu hình, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Toàn bộ số liệu lấy từ traffic thật trong sáu ngày, và đã chia lại theo đúng số pod mà mỗi bản đang chạy.</p>
 
 </div>
 
 <div class="col notes">
   <h2>Ghi chú</h2>
   <ol>
-    <li>Con số bảy lần trộn hai loại thống kê (trung bình uncached token chia cho TTFT p50) nên chỉ nên hiểu là &ldquo;cỡ chừng ấy&rdquo; chứ không phải hệ số chính xác. Chiều thì chắc chắn: 0,879 so với 0,098 giây, trong khi input bản mới chỉ ngắn hơn 25%.</li>
-    <li>Con số 2,8 xuống 1,2 giây tính từ TTFT p50 cộng 300 lần ITL median ở dải concurrency 1 tới 2, không phải đo trực tiếp một request. Hai workload phục vụ client khác nhau nên không so thẳng e2e latency được.</li>
+    <li>Con số bảy lần trộn hai loại thống kê (trung bình uncached token chia cho TTFT p50) nên chỉ nên hiểu là khoảng chừng đó, không phải một hệ số chính xác. Chiều thì chắc chắn: 0,879 so với 0,098 giây, trong khi input bản mới chỉ ngắn hơn 25%.</li>
+    <li>Con số 2,8 xuống 1,2 giây tính từ TTFT p50 cộng 300 lần ITL median ở dải concurrency 1 tới 2, không phải đo thẳng một request cụ thể. Hai workload phục vụ client khác nhau nên không so thẳng độ trễ đầu cuối được.</li>
     <li>Hình minh họa và biểu đồ trong bài dựng bằng gpt-image-2.5. Mọi con số in trên biểu đồ đã đối chiếu lại với số liệu gốc.</li>
     <li>Bài viết không liệt kê chi tiết flag và giá trị tuning của cấu hình serving.</li>
   </ol>
