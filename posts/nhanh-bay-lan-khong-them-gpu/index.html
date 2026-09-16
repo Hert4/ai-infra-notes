@@ -69,15 +69,6 @@
 
 <p>Request hoàn tất sớm thì giải phóng GPU sớm, nên cùng một pod phục vụ được 194 nghìn request mỗi ngày thay vì 88 nghìn.</p>
 
-</div>
-
-<figure>
-  <img src="img/capacity.jpg" alt="Hai thanh ray dài bằng nhau: thanh trên lấp đầy bởi năm khối dài, thanh dưới lấp đầy bởi mười một khối ngắn hơn">
-  <figcaption>Một GPU mỗi ngày chỉ có chừng ấy thời gian để chia. Request hoàn tất càng sớm thì chỗ trống nhường lại cho request sau càng nhiều.</figcaption>
-</figure>
-
-<div class="col">
-
 <h2>Đã sửa những gì</h2>
 
 <p>Weights, tokenizer và chat template giữ nguyên. Các service gọi sang nó cũng không sửa dòng code nào. Bốn thay đổi, tất cả nằm ở tầng engine.</p>
@@ -88,18 +79,18 @@
 
 <p><b>Ba, chia lại bộ nhớ GPU.</b> Model cần hai loại bộ nhớ: một loại lớn dần theo độ dài prompt, một loại cố định cho mỗi request. Engine chia GPU cho hai loại theo một tỉ lệ mặc định, mà với tải thật của MISA thì tỉ lệ đó lệch: loại thứ nhất thừa chỗ, loại thứ hai cạn sạch. Request phải xếp hàng trong khi GPU vẫn còn trống. Nhìn biểu đồ thì tưởng hết tài nguyên, thực ra là chia sai. Chia lại theo số đo thật, giữ nguyên độ dài context, không đánh đổi gì.</p>
 
-<p><b>Bốn, bật nhóm sparse prefill kernel cho lớp full-attention</b>, loại kernel dành cho context rất dài và có ngưỡng kích hoạt theo độ dài KV cache.</p>
-
-<p>Prefill nhanh lên chủ yếu nhờ thay đổi thứ hai. Nhìn file cấu hình thì khó đoán, vì thay đổi thứ tư chiếm số dòng gấp bảy lần.</p>
-
 </div>
 
 <figure>
-  <img src="img/routes.jpg" alt="Một dòng chảy tách thành hai nhánh: nhánh trên rộng và mở, toàn bộ nước chảy qua đó; nhánh dưới bị một cửa cống đóng chặn lại, lòng kênh phía sau khô nứt nẻ">
-  <figcaption>Nhóm kernel thứ ba chỉ chạy khi request dài hơn 95.000 token, loại gần như không xuất hiện. Các layer linear-attention thì nằm trên đường đi của mọi request, nên đổi kernel ở đó là đổi cho toàn bộ traffic.</figcaption>
+  <img src="img/mech-memory.jpg" alt="Sơ đồ: cùng một dải bộ nhớ GPU, cách chia mặc định để trống một mảng lớn ở pool lớn dần theo prompt trong khi pool cố định mỗi request đã cạn và request phải xếp hàng; chia lại thì cả hai pool đều dùng hết và không còn xếp hàng">
+  <figcaption><b>Cùng một dải bộ nhớ GPU, hai cách chia.</b> Tỉ lệ mặc định để trống một mảng lớn ở loại lớn dần theo prompt, trong khi loại cố định cho mỗi request đã cạn, nên request phải xếp hàng dù GPU còn chỗ. Dời ranh giới theo số đo thật thì cả hai đều dùng hết.</figcaption>
 </figure>
 
 <div class="col">
+
+<p><b>Bốn, bật nhóm sparse prefill kernel cho lớp full-attention</b>, loại kernel dành cho context rất dài và có ngưỡng kích hoạt theo độ dài KV cache.</p>
+
+<p>Prefill nhanh lên chủ yếu nhờ thay đổi thứ hai. Nhìn file cấu hình thì khó đoán, vì thay đổi thứ tư chiếm số dòng gấp bảy lần.</p>
 
 <h2>Tốc độ đến từ đâu</h2>
 
