@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nhanh bảy lần, không thêm GPU · MISA AI Platform</title>
-<meta name="description" content="misa-ai-1.1 đổi engine suy luận: prefill nhanh hơn bảy lần, mỗi pod phục vụ gấp đôi số request, cùng số GPU và cùng bộ trọng số.">
+<title>Đổi engine, không thêm GPU · MISA AI Platform</title>
+<meta name="description" content="Hai model production của MISA chuyển sang sglang kèm backend attention mới: prefill nhanh hơn bảy lần, mỗi pod phục vụ gấp đôi số request, không thêm một GPU nào.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -21,9 +21,9 @@
 
 <header class="mast">
   <p class="eyebrow">Hạ tầng suy luận</p>
-  <h1>Nhanh bảy lần, không thêm GPU</h1>
+  <h1>Đổi engine, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, cộng đúng một dòng cấu hình. Cuối bài là mô hình thứ hai, <code>misa-ai-2.0</code>, đổi engine cùng đợt và gần như xoá sạch thời gian chờ trong hàng đợi.</p>
+  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, cộng đúng một dòng cấu hình. Cuối bài là mô hình thứ hai, <code>misa-ai-2.0</code>, chuyển engine trong cùng đợt kèm một backend attention mới, và gần như xoá sạch thời gian chờ trong hàng đợi.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -126,7 +126,13 @@
 
 <h2>Cùng đợt đó, misa-ai-2.0</h2>
 
-<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, và nó cũng đổi engine trong cùng đợt, từ vLLM sang sglang. Kết quả rõ nhất nằm ở hàng đợi: thời gian một request chờ tới lượt giảm từ 0,297 giây xuống 0,005 giây.</p>
+<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, và nó cũng được chuyển sang sglang trong cùng đợt. Khác với <code>misa-ai-1.1</code>, lần này không chỉ đổi engine: bản mới chạy trên một backend attention khác, CompactAttention, thay vì đường attention mặc định.</p>
+
+<p>Thay vì quét toàn bộ prefix ở mỗi bước, CompactAttention chia prefix thành từng khối rồi chỉ giữ lại một số khối quan trọng nhất, cộng thêm phần đầu và phần đuôi luôn được giữ. Cấu hình production giữ 128 khối và chỉ bật cơ chế này khi prefix vượt 8.192 token, vì chi phí dựng chỉ mục là cố định còn phần tiết kiệm mới tăng theo độ dài.</p>
+
+<p>Quyết định chuyển không đến ngay. Cuối tháng 8, tôi đã dựng một bàn đo riêng trên 1×H200 với prompt 27,6 nghìn token và không cho dùng lại cache, để so thẳng prefill giữa hai engine. sglang bản gốc nhanh hơn vLLM 1,15 lần; thêm ba bản vá kernel thì lên 1,27 lần. Mức đó chưa đủ để đánh đổi một lần chuyển production, nên tôi giữ nguyên hiện trạng và đi tìm phần còn thiếu. Backend attention mới chính là phần đó.</p>
+
+<p>Trên traffic thật, kết quả rõ nhất nằm ở hàng đợi: thời gian một request chờ tới lượt giảm từ 0,297 giây xuống 0,005 giây.</p>
 
 <p>Trường hợp này còn cho thấy một chi tiết đáng chú ý về cách cụm đang vận hành. Có ba workload cùng phục vụ bộ trọng số đó và cả ba đều khai <code>served-model-name</code> giống hệt nhau, nhưng mỗi workload dùng một api-key riêng, nên gateway định tuyến cho chúng ba luồng traffic khác hẳn nhau. Input trung bình lần lượt là 10.159, 8.714 và 14.272 token; output trung bình là 100, 427 và 366 token.</p>
 
