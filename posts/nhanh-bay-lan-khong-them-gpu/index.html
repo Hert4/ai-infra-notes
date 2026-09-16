@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nhanh bảy lần, không thêm GPU — MISA AI Platform</title>
+<title>Nhanh bảy lần, không thêm GPU · MISA AI Platform</title>
 <meta name="description" content="Đổi engine cho một model 35 tỷ tham số đang chạy production: prefill nhanh hơn bảy lần, cùng thẻ GPU, cùng trọng số.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,12 +23,12 @@
   <p class="eyebrow">Hạ tầng suy luận</p>
   <h1>Nhanh bảy lần, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead"><code>misa-ai-1.1</code> đang chạy production được chuyển sang engine mới. Cùng bộ trọng số, cùng thẻ GPU, không đụng gì tới chất lượng câu trả lời. Sau sáu ngày traffic thật: prefill nhanh hơn khoảng bảy lần, thời gian chờ giảm gần chín lần, và mỗi thẻ phục vụ được gấp đôi số người. Phần dưới là các con số, chuyện tốc độ đó thực ra đến từ đâu, và ba lần tôi phải tự bác bỏ mình trước khi dám tin chúng.</p>
+  <p class="lead"><code>misa-ai-1.1</code> đang chạy production được chuyển sang engine mới. Cùng bộ trọng số, cùng thẻ GPU, chất lượng câu trả lời không đổi. Sáu ngày traffic thật sau đó: prefill nhanh hơn bảy lần, người dùng chờ ít đi gần chín lần, mỗi thẻ gánh gấp đôi số request. Bài này đưa ra các con số, chỉ ra tốc độ đó thực sự đến từ đâu, và kể lại ba lần tôi phải tự bác bỏ mình trước khi dám tin chúng.</p>
 </header>
 
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
-  <figcaption>Với mỗi câu hỏi, máy làm hai việc nối nhau và cả hai đều dùng chung một con GPU. Việc thứ nhất là đọc hết câu hỏi &mdash; đây là lúc người dùng ngồi chờ, chưa nhìn thấy chữ nào. Việc thứ hai là viết câu trả lời ra từng chữ. Trong hình, các khối dày là việc thứ nhất, các dòng mảnh là việc thứ hai. Phiên bản mới làm nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở việc thứ nhất.</figcaption>
+  <figcaption>Với mỗi câu hỏi, máy làm hai việc nối nhau và cả hai đều dùng chung một con GPU. Việc thứ nhất là đọc hết câu hỏi. Đây là lúc người dùng ngồi chờ, chưa nhìn thấy chữ nào. Việc thứ hai là viết câu trả lời ra từng chữ. Trong hình, các khối dày là việc thứ nhất, các dòng mảnh là việc thứ hai. Phiên bản mới làm nhanh hơn ở cả hai, nhanh hơn nhiều nhất ở việc thứ nhất.</figcaption>
 </figure>
 
 <main>
@@ -36,21 +36,21 @@
 
 <h2>Đổi engine, giữ nguyên mọi thứ khác</h2>
 
-<p><code>misa-ai-1.1</code> là model đang phục vụ người dùng thật trên cụm hạ tầng nội bộ, mỗi ngày nhận khoảng một triệu lượt hỏi. Về mặt kỹ thuật, đây là mô hình MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8 &mdash; ba đặc điểm này sẽ quay lại ở phần giải thích nguyên nhân bên dưới.</p>
+<p><code>misa-ai-1.1</code> phục vụ người dùng thật trên cụm nội bộ, mỗi ngày khoảng một triệu lượt hỏi. Về kỹ thuật: MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8. Ba đặc điểm này sẽ quay lại ở phần giải thích nguyên nhân.</p>
 
-<p>Đầu tháng 9, mô hình được chuyển sang một phiên bản SGLang mới hơn, đồng thời sử dụng một cấu hình attention khác. Trong quá trình chuyển đổi, các yếu tố còn lại được giữ nguyên: trọng số mô hình, context length, memory fraction, chunked prefill size và tài nguyên GPU được cấp phát như trước. Cả hai phiên bản đều không bật speculative decoding.</p>
+<p>Đầu tháng 9 tôi chuyển nó sang một bản SGLang mới hơn kèm cấu hình attention khác. Mọi thứ còn lại giữ nguyên: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp. Cả hai bản đều không bật speculative decoding.</p>
 
-<p>Do đó, bất kỳ thay đổi nào quan sát được trong hiệu năng sau khi chuyển đổi đều có thể được quy về sự khác biệt ở inference engine và configuration, thay vì thay đổi về phần cứng hoặc model weights.</p>
+<p>Nhờ vậy, chênh lệch đo được sau đó thuộc về engine và cấu hình, không phải phần cứng hay model.</p>
 
 
 
 <h2>Người dùng được hưởng lợi gì?</h2>
 
-<p>Một inference server thực hiện hai giai đoạn chính với mỗi request, và mỗi giai đoạn có ảnh hưởng khác nhau đến trải nghiệm người dùng.</p>
+<p>Mỗi request đi qua hai giai đoạn, và chúng tác động lên trải nghiệm theo hai cách khác nhau.</p>
 
-<p>Đầu tiên là prefill: hệ thống xử lý toàn bộ input trước khi bắt đầu sinh token. Trong khoảng thời gian này, người dùng phải chờ trước khi nhận được token đầu tiên. Sau đó là decode: mô hình sinh output token-by-token cho đến khi hoàn tất câu trả lời. Hai giai đoạn này cùng sử dụng tài nguyên GPU, do đó hiệu năng của inference engine có ảnh hưởng trực tiếp đến cả thời gian phản hồi ban đầu lẫn tốc độ sinh token.</p>
+<p>Prefill là lúc máy đọc hết input. Người dùng ngồi chờ suốt quãng này, chưa thấy chữ nào. Decode là lúc model viết câu trả lời ra từng token. Hai giai đoạn giành nhau cùng một con GPU, nên engine ảnh hưởng thẳng tới cả thời gian chờ ban đầu lẫn tốc độ chữ chạy.</p>
 
-<p>Phiên bản mới cải thiện hiệu năng ở cả hai giai đoạn, với mức cải thiện rõ rệt hơn ở prefill.</p>
+<p>Bản mới nhanh hơn ở cả hai. Prefill là chỗ nó thắng đậm.</p>
 
 </div>
 
@@ -61,7 +61,7 @@
 
 <div class="col">
 
-<p>Ở giai đoạn decode, throughput cũng được cải thiện một cách nhất quán trên toàn bộ các mức tải được đo.</p>
+<p>Decode cũng nhanh hơn, đều ở mọi mức tải tôi đo được.</p>
 
 </div>
 
@@ -72,9 +72,9 @@
 
 <div class="col">
 
-<p>Khi kết hợp hai giai đoạn, chúng ta có được chỉ số phản ánh trực tiếp hơn trải nghiệm thực tế của người dùng. Với một response dài 300 token, dựa trên các giá trị median được đo trong production, tổng thời gian từ lúc gửi request tới lúc nhận đủ câu trả lời giảm từ 2,8 xuống 1,2 giây. Riêng quãng người dùng ngồi chờ trước token đầu tiên giảm từ 0,88 xuống 0,10 giây, còn thời gian request nằm trong hàng đợi lúc máy bận giảm từ 0,099 xuống 0,005 giây.</p>
+<p>Ghép hai giai đoạn lại thì ra con số người dùng thực sự cảm thấy. Với response 300 token, tính theo median đo trong production, tổng thời gian từ lúc gửi request tới lúc nhận đủ câu trả lời giảm từ 2,8 xuống 1,2 giây. Quãng chờ trước token đầu tiên giảm từ 0,88 xuống 0,10 giây. Thời gian nằm trong hàng đợi lúc máy bận giảm từ 0,099 xuống 0,005 giây.</p>
 
-<p>Ngoài việc giảm thời gian phản hồi, mỗi request cũng hoàn tất sớm hơn và giải phóng tài nguyên GPU nhanh hơn. Nhờ đó, cùng một pod có thể xử lý nhiều request hơn: capacity tăng từ 88 nghìn lên 194 nghìn request mỗi ngày mỗi pod.</p>
+<p>Request xong sớm thì trả GPU sớm, nên cùng một pod gánh được nhiều hơn: 88 nghìn lên 194 nghìn request mỗi ngày.</p>
 
 </div>
 
@@ -87,15 +87,15 @@
 
 <h2>Cụ thể thì đã làm gì</h2>
 
-<p>Toàn bộ can thiệp gồm ba thay đổi, không thay đổi nào chạm vào model. Không sửa weights, không sửa tokenizer, không sửa chat template, không sửa một dòng code nào ở các service đang gọi sang nó.</p>
+<p>Ba thay đổi, không cái nào chạm vào model. Weights, tokenizer và chat template giữ nguyên. Các service gọi sang nó cũng không sửa dòng code nào.</p>
 
-<p>Thứ nhất là nâng container image. Bản cũ chạy từ đầu tháng 7, bản mới ra đầu tháng 9, cách nhau khoảng hai tháng phát triển upstream.</p>
+<p>Thứ nhất, nâng container image. Bản cũ chạy từ đầu tháng 7, bản mới ra đầu tháng 9, cách nhau khoảng hai tháng phát triển upstream.</p>
 
-<p>Thứ hai là bật prefill backend dành riêng cho lớp linear-attention. Model là kiến trúc hybrid, phần lớn layer dùng linear attention, và cấu hình cũ không khai báo backend cho nhóm layer này nên chúng chạy bằng cách tính mặc định, vốn viết cho kiểu attention khác và chậm hơn hẳn với kiến trúc này.</p>
+<p>Thứ hai, bật prefill backend dành riêng cho lớp linear-attention. Model là kiến trúc hybrid, phần lớn layer dùng linear attention. Cấu hình cũ không khai báo backend cho nhóm này nên chúng chạy bằng cách tính mặc định, vốn viết cho kiểu attention khác và chậm hơn hẳn ở đây.</p>
 
-<p>Thứ ba là bật thêm nhóm sparse prefill kernel cho lớp full-attention, loại kernel dành cho prompt có context rất dài, kèm một ngưỡng kích hoạt theo độ dài KV cache.</p>
+<p>Thứ ba, bật nhóm sparse prefill kernel cho lớp full-attention. Kernel này sinh ra cho prompt context rất dài, và nó có một ngưỡng kích hoạt theo độ dài KV cache.</p>
 
-<p>Thay đổi thứ hai mới là thay đổi đáng giá, và đó không phải điều hiển nhiên khi nhìn vào cấu hình: nhóm flag của thay đổi thứ ba dài gấp bảy lần, nên rất dễ được ghi công nhầm. Phần lớn mức tăng prefill thuộc về nó. Phần còn lại, rõ nhất ở tốc độ decode, thuộc về bản build mới.</p>
+<p>Thay đổi thứ hai mang về phần lớn mức tăng prefill. Nhìn vào cấu hình thì khó đoán ra, vì nhóm flag của thay đổi thứ ba dài gấp bảy lần nên rất dễ được ghi công nhầm. Phần còn lại, rõ nhất ở tốc độ decode, thuộc về bản build mới.</p>
 
 </div>
 
@@ -108,13 +108,11 @@
 
 <h2>Nhưng hiệu năng được cải thiện nhờ đâu?</h2>
 
-<p>Đây là phần đáng chú ý nhất, bởi nguyên nhân thực tế không nằm ở yếu tố dễ được suy đoán nhất.</p>
+<p>Cấu hình mới thêm một nhóm flag cho sparse prefill kernel, loại kernel viết cho prompt context rất dài. Đọc cấu hình thì rất dễ kết luận chính nó làm nên tốc độ.</p>
 
-<p>Cấu hình mới bổ sung một nhóm flag liên quan đến sparse prefill kernel &mdash; một kernel được thiết kế để xử lý các prompt có context rất dài. Nhìn vào cấu hình, rất dễ đi đến kết luận rằng chính kernel này là nguyên nhân tạo ra mức cải thiện hiệu năng quan sát được.</p>
+<p>Trước khi ghi công, tôi đi kiểm điều kiện để kernel đó thực sự chạy.</p>
 
-<p>Tuy nhiên, trước khi quy kết nguyên nhân, tôi kiểm tra lại điều kiện để kernel này thực sự được kích hoạt.</p>
-
-<p>Kết quả cho thấy kernel chỉ được sử dụng khi KV cache của một request vượt 95.000 token. Trong khi đó, prompt thực tế của workload này ngắn hơn ngưỡng đó một cách đáng kể.</p>
+<p>Nó chỉ chạy khi KV cache của một request vượt 95.000 token. Prompt thật của workload này ngắn hơn ngưỡng đó rất nhiều.</p>
 
 </div>
 
@@ -125,11 +123,11 @@
 
 <div class="col">
 
-<p>Vì vậy, phần lớn mức cải thiện không đến từ sparse prefill kernel, mà đến từ việc bật đúng prefill backend cho nhóm layer linear-attention &mdash; nhóm layer nằm trên đường đi của mọi request.</p>
+<p>Phần lớn mức cải thiện vì vậy đến từ prefill backend của nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
 
-<p>Đây là một chi tiết quan trọng cho các lần nâng cấp tiếp theo. Nếu quy kết sai nguyên nhân và áp dụng nguyên cả bộ sparse-prefill flags cho một model full-attention, kết quả có thể không mang lại cải thiện tương ứng vì điều kiện kích hoạt của kernel không xuất hiện trong workload thực tế.</p>
+<p>Chi tiết này quyết định các lần nâng cấp sau. Ghi công nhầm thì sẽ có người bê nguyên bộ sparse-prefill flags sang một model full-attention rồi ngồi thắc mắc vì sao không nhanh lên, đơn giản vì điều kiện kích hoạt không bao giờ xuất hiện trong workload của họ.</p>
 
-<p>Bài học có tính tổng quát ở đây là: inference configuration cần được lựa chọn dựa trên kiến trúc model và đặc tính workload, thay vì bật càng nhiều optimization flags càng tốt.</p>
+<p>Chọn cấu hình serving theo kiến trúc model và hình dạng workload, đừng chọn theo số lượng flag bật được.</p>
 
 </div>
 
@@ -137,13 +135,13 @@
 
 <h2>Vì sao có thể tin vào những con số này?</h2>
 
-<p>Mức cải thiện lên tới bảy lần là đủ lớn để cần được kiểm chứng kỹ. Trong quá trình kiểm tra, tôi phát hiện ba vấn đề trong cách đo ban đầu.</p>
+<p>Bảy lần là con số đủ lớn để đáng nghi. Tôi nghi, nên đi tìm cách bác bỏ nó. Tìm được ba lỗi trong cách đo ban đầu.</p>
 
 <h3>Lần thứ nhất: nhầm đơn vị đo</h3>
 
-<p>Trên một endpoint sử dụng spec decode, mỗi SSE chunk chứa trung bình 2,4 token. Script đo ban đầu đếm số chunk và coi mỗi chunk tương đương một token. Vì vậy, một response thực tế dài 300 token và được truyền qua 124 chunk bị ghi nhận thành 124 token.</p>
+<p>Trên một endpoint có spec decode, mỗi SSE chunk chở trung bình 2,4 token. Script đo đầu tiên đếm chunk rồi ghi thành token, nên một response 300 token về trong 124 chunk bị ghi là 124.</p>
 
-<p>Sai lệch này khiến một cải thiện thực tế khoảng 2,4 lần bị biểu diễn thành kết quả kém hơn. Đây cũng là một dạng sai số dễ bị bỏ qua trong quá trình kiểm tra, bởi kết quả vẫn phù hợp với giả định rằng phiên bản mới có thể phát sinh regression.</p>
+<p>Một cải tiến 2,4 lần hiện ra thành bước lùi. Sai số đi theo chiều đó thì khó bị chất vấn, vì nó khớp với định kiến rằng bản mới hay sinh regression.</p>
 
 </div>
 
@@ -156,11 +154,11 @@
 
 <h3>Lần thứ hai: nhầm số lượng pod</h3>
 
-<p>Cấu hình của cả hai workload đều khai báo một replica. Tuy nhiên, trên thực tế, phiên bản mới đang chạy 5 pod, trong khi phiên bản cũ chỉ chạy 2 pod.</p>
+<p>Cấu hình của cả hai workload đều khai báo một replica. Thực tế bản mới chạy 5 pod, bản cũ chạy 2 pod.</p>
 
-<p>Nguyên nhân là Kubernetes autoscaler đã scale workload trong quá trình vận hành, nhưng thông tin trong cấu hình không phản ánh số pod thực tế. Vì vậy, chỉ đọc configuration là không đủ để phát hiện chênh lệch này.</p>
+<p>Autoscaler của Kubernetes đã scale trong lúc vận hành mà không ghi ngược vào cấu hình, nên đọc file cấu hình thì không thấy gì bất thường.</p>
 
-<p>Cách kiểm chứng là đối chiếu số lượng process thực tế đang export metric về Prometheus. Toàn bộ số liệu trong báo cáo sau đó được chuẩn hóa theo số pod để đảm bảo phép so sánh được thực hiện trên cùng một đơn vị.</p>
+<p>Cách duy nhất biết được là đếm số process đang export metric về Prometheus. Mọi con số trong bài đều đã chia theo số pod thật.</p>
 
 </div>
 
@@ -173,11 +171,9 @@
 
 <h3>Lần thứ ba: cố định sai biến khi đánh giá ITL</h3>
 
-<p>Đây là trường hợp đáng chú ý nhất.</p>
+<p>Câu hỏi còn lại: tải cao thì bản mới có chậm decode hơn không? Phải nhìn phần đuôi chứ không nhìn trung bình, tức nhóm 1% request xui nhất, thường gọi là p99. Trung bình đẹp mà đuôi xấu thì vẫn có người phải ngồi chờ lâu bất thường.</p>
 
-<p>Một câu hỏi quan trọng là: khi tải tăng cao, phiên bản mới có bị chậm decode nhiều hơn không? Câu hỏi này phải nhìn vào phần đuôi chứ không phải mức trung bình &mdash; tức nhóm 1% request xui nhất, thường gọi là p99. Trung bình đẹp mà đuôi xấu thì vẫn có người dùng phải ngồi chờ lâu bất thường.</p>
-
-<p>Ban đầu, tôi giữ cố định số request chạy cùng lúc trên mỗi pod rồi so độ trễ đuôi của decode. Kết quả cho thấy chênh lệch rất lớn ở dải tải cao nhất: 32,9 ms so với 180,8 ms. Từ đó, tôi đưa ra kết luận rằng phiên bản mới đánh đổi tốc độ decode lấy latency dưới tải cao.</p>
+<p>Tôi giữ cố định số request chạy cùng lúc trên mỗi pod rồi so độ trễ đuôi của decode. Dải tải cao nhất ra 32,9 ms so với 180,8 ms, và tôi viết luôn câu kết luận.</p>
 
 </div>
 
@@ -194,11 +190,11 @@
 
 <div class="col">
 
-<p>Yếu tố quyết định mức độ contention của decode không chỉ là số request đang decode, mà còn là lượng prefill đang được xử lý. Phiên bản mới nhận input dài hơn đáng kể và đồng thời tạo output ngắn hơn. Vì vậy ở cùng một số request chạy song song, phiên bản mới thực tế đang prefill nhiều hơn khoảng 1,7 lần: 8.839 so với 5.324 token mỗi pod mỗi giây.</p>
+<p>Thứ quyết định độ nghẽn của decode không chỉ là số request đang decode, mà còn là lượng prefill đang chạy cùng. Bản mới nhận input dài hơn và sinh output ngắn hơn, nên ở cùng một số request song song nó đang prefill nhiều hơn khoảng 1,7 lần: 8.839 so với 5.324 token mỗi pod mỗi giây.</p>
 
-<p>Nói cách khác, phép đo ban đầu đã đặt hai phiên bản vào hai mức tải thực tế khác nhau rồi dùng kết quả đó để so sánh latency. Tôi đã yêu cầu phiên bản mới xử lý nhiều công việc hơn trước khi kết luận rằng nó chậm hơn.</p>
+<p>Phép đo ban đầu đặt hai bản vào hai mức tải khác nhau rồi lấy đó ra so latency. Tôi đã bắt bản mới làm nhiều việc hơn rồi chê nó chậm.</p>
 
-<p>Khi xếp lại theo tốc độ prefill trên mỗi pod, kết quả đổi hẳn.</p>
+<p>Xếp lại theo tốc độ prefill trên mỗi pod thì bảng lật ngược.</p>
 
 </div>
 
@@ -209,25 +205,23 @@
 
 <div class="col">
 
-<p>Tuy nhiên, cũng không nên diễn giải kết quả này như một chiến thắng tuyệt đối ở mọi mức tải.</p>
+<p>Ở dải tải cao nhất thì chưa so được. Bản cũ chỉ có 3 giờ mẫu, bản mới có 28 giờ, và mức tải trung vị của hai bên chênh khoảng 6.000 token mỗi giây. Chừng đó dữ liệu chưa đủ để kết luận về vùng tải cực hạn.</p>
 
-<p>Ở dải tải cao nhất, phiên bản cũ chỉ có 3 giờ dữ liệu mẫu, trong khi phiên bản mới có 28 giờ. Đồng thời mức tải trung vị của hai bên cũng chênh nhau khoảng 6.000 token mỗi giây. Với mức chênh lệch này, dữ liệu hiện tại chưa đủ để đưa ra một so sánh trực tiếp đáng tin cậy ở vùng tải cực hạn.</p>
+<p>ITL p99 ở vùng đó vì vậy vẫn để ngỏ, chờ một lượt benchmark có kiểm soát giữ y hệt cả kiểu tải lẫn tốc độ prefill giữa hai bản.</p>
 
-<p>Do đó, kết luận về ITL p99 ở tải cực hạn vẫn được để ngỏ và cần được xác nhận bằng một benchmark có kiểm soát, trong đó cả kiểu tải lẫn tốc độ prefill đều được giữ y hệt nhau giữa hai phiên bản.</p>
-
-<p>Ngược lại, ITL median vẫn cho kết quả tốt hơn cho phiên bản mới dưới cả hai cách ghép tải, bao gồm cả cách chuẩn hóa bất lợi hơn cho phiên bản mới. Đây là con số tôi cho rằng có đủ cơ sở để sử dụng.</p>
+<p>ITL median thì thắng dưới cả hai cách ghép tải, kể cả cách bất lợi cho bản mới. Con số đó tôi tin.</p>
 
 <h2>Một lần báo động giả</h2>
 
-<p>Trong quá trình thu thập dữ liệu, dashboard Grafana của một workload khác bất ngờ chuyển sang trạng thái 0% hiệu suất. Panel được refresh mỗi 5 giây và biểu hiện này khá giống một sự cố thực tế.</p>
+<p>Giữa lúc đang đo, dashboard Grafana của một workload khác tụt xuống 0% hiệu suất. Panel refresh 5 giây một lần, nhìn rất giống sự cố thật.</p>
 
-<p>Sau khi kiểm tra công thức, nguyên nhân được xác định là cách panel tính metric: số request đang chạy chia cho tổng số request đang chạy và đang chờ, với một epsilon nhỏ được thêm vào mẫu số để tránh phép chia cho 0.</p>
+<p>Công thức của panel là số request đang chạy chia cho tổng đang chạy và đang chờ, cộng một epsilon nhỏ ở mẫu để khỏi chia cho 0.</p>
 
-<p>Ở trạng thái hoàn toàn idle, metric này trả về 100%. Để metric giảm xuống 0%, cần xảy ra trạng thái có request đang chờ nhưng không có request nào đang chạy. Prometheus đã chụp đúng trạng thái này trong một lần scrape, khiến dashboard hiển thị 0% và duy trì trạng thái đó trong khoảng một phút.</p>
+<p>Lúc rảnh hoàn toàn nó trả về 100%. Muốn xuống 0% thì phải có request nằm chờ trong khi không có request nào đang chạy. Prometheus chụp trúng đúng trạng thái đó trong một nhịp scrape, rồi treo nguyên suốt một phút.</p>
 
 <p>Quét lại cả tuần thì thấy đúng 9 trên 10.080 điểm đo rơi xuống dưới ngưỡng đỏ, mỗi điểm gói gọn trong một phút. Không request nào bị abort trong các phút đó, độ trễ không nhúc nhích so với hai phút liền kề, và không pod nào restart trong bốn ngày trước đó. Model không hề có sự cố; công thức của panel mới là thứ cần sửa.</p>
 
-<p>Đây là một ví dụ nhỏ nhưng quan trọng: production metrics không phải lúc nào cũng phản ánh trực tiếp điều mà tên của metric hoặc biểu đồ khiến chúng ta nghĩ rằng nó đang đo. Với các kết luận về performance, cần kiểm tra cả định nghĩa metric, đơn vị đo, sampling window và điều kiện workload trước khi diễn giải kết quả.</p>
+<p>Metric production không phải lúc nào cũng đo thứ mà tên của nó gợi ra. Trước khi kết luận về hiệu năng, kiểm luôn định nghĩa metric, đơn vị, sampling window và trạng thái workload lúc đó.</p>
 
 <h2>Còn bỏ ngỏ</h2>
 
@@ -239,16 +233,16 @@
 
 <h2>Điều đáng mang đi</h2>
 
-<p>Cùng một thẻ GPU, cùng một model, cùng chất lượng đầu ra. Người dùng chờ ít hơn khoảng chín lần ở đoạn khó chịu nhất, và hệ thống phục vụ được gấp đôi số request. Toàn bộ chi phí là một lần đổi image kèm vài dòng cấu hình.</p>
+<p>Cùng thẻ GPU, cùng model, cùng chất lượng đầu ra. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình.</p>
 
-<p>Chi phí thật nằm ở chỗ khác: bốn ngày đo đạc, ba kết luận sai phải rút lại, và cùng một bài học lặp lại dưới ba hình dạng khác nhau. Khi so sánh hai hệ thống đang nhận tải khác nhau, biến cần giữ cố định là biến thực sự sinh ra chi phí, và mọi bảng số phải kèm số giờ mẫu và mức tải trung vị của từng dải. Thiếu hai cột đó thì bảng nào nhìn cũng thuyết phục như nhau.</p>
+<p>Chi phí thật nằm chỗ khác: bốn ngày đo đạc và ba kết luận sai phải rút lại, cả ba hóa ra là một bài học đội ba lốt. Khi so hai hệ thống đang nhận tải khác nhau, thứ phải giữ cố định là thứ thực sự sinh ra chi phí. Và mọi bảng số phải in kèm số giờ mẫu cùng mức tải trung vị của từng dải, thiếu hai cột đó thì bảng nào nhìn cũng thuyết phục ngang nhau.</p>
 
 </div>
 
 <div class="col notes">
   <h2>Ghi chú</h2>
   <ol>
-    <li>Con số bảy lần trộn hai loại thống kê, trung bình uncached token chia cho TTFT p50, nên nên đọc như một bậc độ lớn hơn là một hệ số chính xác. Chiều thì chắc chắn: 0,879 giây so với 0,098 giây, trong khi input của phiên bản mới chỉ ngắn hơn 25%.</li>
+    <li>Con số bảy lần trộn hai loại thống kê, trung bình uncached token chia cho TTFT p50, nên đọc như một bậc độ lớn hơn là một hệ số chính xác. Chiều thì chắc chắn: 0,879 giây so với 0,098 giây, trong khi input của phiên bản mới chỉ ngắn hơn 25%.</li>
     <li>Con số 2,8 xuống 1,2 giây cho response 300 token được tính từ TTFT p50 cộng 300 lần ITL median ở dải concurrency 1 tới 2, không phải đo trực tiếp một request cụ thể. Hai workload phục vụ client khác nhau nên độ dài response thực tế của chúng lệch nhau, không so thẳng e2e latency được.</li>
     <li>Các hình minh họa và bốn biểu đồ trong bài được dựng bằng gpt-image-2.5. Mọi con số in trên biểu đồ đã được đối chiếu lại với số liệu Prometheus gốc; hình dạng cột và độ dốc đường chỉ mang tính minh họa.</li>
     <li>Bài viết không liệt kê chi tiết flag và giá trị tuning của cấu hình serving.</li>
