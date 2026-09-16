@@ -170,7 +170,7 @@
 
 <p>Hai model production đổi engine, không thêm một GPU nào. Với <code>misa-ai-1.1</code>, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Với <code>misa-ai-2.0</code>, chạy lại đúng chuỗi request từng làm sập bản cũ, latency trung bình từ 46,0 xuống 3,2 giây.</p>
 
-<p>Phần việc nằm dưới hai con số đó không phải là sửa cấu hình. Để Gemma 4 chạy được trên backend attention nhanh, phải vá chính engine, gồm một bản vá lấy từ PR upstream chưa merge và một bản tự viết sau khi đo chữ ký hàm thật thay vì tin vào cách thư viện đoán. Để biết chia bộ nhớ GPU thế nào cho đúng, phải đo tải thật rồi mới dời ranh giới. Và để biết flag nào thực sự có công, phải đếm trong gần sáu triệu request xem có bao nhiêu cái chạm ngưỡng kích hoạt. Đáp số là sáu mươi.</p>
+<p>Phần việc nằm dưới hai con số đó không phải là sửa cấu hình. Để Gemma 4 chạy được trên backend attention nhanh, phải vá chính engine, gồm một bản vá lấy từ PR upstream chưa merge và một bản tự viết sau khi đo chữ ký hàm thật thay vì tin vào cách thư viện đoán. Để biết chia bộ nhớ GPU thế nào cho đúng, phải đo tải thật rồi mới dời ranh giới. Và để biết flag nào thực sự có công, phải đếm trong gần sáu triệu request xem có bao nhiêu cái đủ dài để nhóm kernel sparse prefill được gọi, tức có KV cache vượt 95.000 token. Đáp số là sáu mươi.</p>
 
 <p>Cụm GPU của bạn nhiều khả năng cũng đang chạy dưới sức của nó. Hãy đẩy sản phẩm tới giới hạn mới và cho tôi biết chỗ nào còn nghẽn.</p>
 
