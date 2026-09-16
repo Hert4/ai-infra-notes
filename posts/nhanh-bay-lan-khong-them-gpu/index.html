@@ -23,7 +23,7 @@
   <p class="eyebrow">Hạ tầng phục vụ mô hình</p>
   <h1>Đổi engine, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm GPU nội bộ</span></p>
-  <p class="lead">Đầu tháng 9, tôi chuyển <code>misa-ai-1.1</code> sang một engine mới. Thời gian chờ tới token đầu tiên từ 0,879 giây xuống 0,098 giây, và mỗi pod phục vụ gấp đôi số request. Vẫn bộ trọng số đó, vẫn từng ấy GPU, chất lượng output không đổi. Cùng đợt, <code>misa-ai-2.0</code> cũng đổi engine kèm một backend attention mới.</p>
+  <p class="lead">Bạn gõ xong câu hỏi, bấm gửi, rồi nhìn một màn hình trống. Một giây ở đó dài hơn bạn tưởng. Đầu tháng 9, tôi chuyển <code>misa-ai-1.1</code> sang một engine mới và quãng trống ấy rút từ 0,879 giây xuống 0,098 giây, trong khi mỗi pod phục vụ gấp đôi số request. Vẫn bộ trọng số đó, vẫn từng ấy GPU, chất lượng output không đổi. Câu hỏi đáng hỏi là phần nhanh lên đó đến từ đâu.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -102,7 +102,7 @@
 
 <h2>Tốc độ đến từ đâu</h2>
 
-<p>Nhóm flag sparse prefill là ứng viên rõ ràng nhất: kernel viết cho context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín. Trước khi ghi công, tôi đi kiểm điều kiện để nó thực sự chạy. Nó chỉ chạy khi KV cache của một request vượt 95.000 token.</p>
+<p>Nghi phạm đầu tiên là nhóm flag sparse prefill. Kernel viết cho context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín tới mức tôi suýt viết luôn vào báo cáo. Trước khi ghi công, tôi đi kiểm một điều: nó chỉ chạy khi KV cache của một request vượt 95.000 token. Còn prompt thật của workload này thì dài bao nhiêu?</p>
 
 </div>
 
@@ -170,7 +170,9 @@
 
 <p>Một lần thay image, thêm vài dòng cấu hình, quãng chờ token đầu tiên ngắn đi chín lần và mỗi pod phục vụ gấp đôi số request. Toàn bộ số liệu lấy từ traffic thật trong sáu ngày, và đã chia lại theo đúng số pod mà mỗi bản đang chạy.</p>
 
-<p>Phần lớn cụm GPU ở đâu cũng đang chạy dưới sức của nó, và thứ chặn lại thường không phải phần cứng. Hạ tầng giờ chịu được gấp đôi tải trên cùng số GPU, nên hãy đẩy sản phẩm của bạn tới giới hạn mới đó và cho tôi biết chỗ nào còn nghẽn.</p>
+<p>Nhưng thứ đáng nhớ không phải con số bảy lần. Cả hai lần nhanh lên đều đến từ chỗ không ai nhìn vào: một dòng khai báo backend bị bỏ quên, và một ranh giới chia bộ nhớ đặt sai chỗ. Phần cứng chưa bao giờ là thứ chặn đường.</p>
+
+<p>Cụm GPU của bạn nhiều khả năng cũng đang chạy dưới sức của nó. Hãy đẩy sản phẩm tới giới hạn mới và cho tôi biết chỗ nào còn nghẽn.</p>
 
 </div>
 
