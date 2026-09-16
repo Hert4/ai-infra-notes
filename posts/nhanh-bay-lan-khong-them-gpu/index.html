@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Nhanh bảy lần, không thêm GPU · MISA AI Platform</title>
-<meta name="description" content="misa-ai-1.1 đổi engine suy luận: prefill nhanh hơn bảy lần, mỗi pod gánh gấp đôi request, cùng số GPU và cùng bộ trọng số.">
+<meta name="description" content="misa-ai-1.1 đổi engine suy luận: prefill nhanh hơn bảy lần, mỗi pod phục vụ gấp đôi số request, cùng số GPU và cùng bộ trọng số.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -23,7 +23,7 @@
   <p class="eyebrow">Hạ tầng suy luận</p>
   <h1>Nhanh bảy lần, không thêm GPU</h1>
   <p class="byline"><span>MISA AI Platform</span><span>14 tháng 9, 2026</span><span>Cụm suy luận nội bộ</span></p>
-  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, cộng đúng một dòng cấu hình. Cuối bài là con thứ hai, <code>misa-ai-2.0</code>, đổi engine cùng đợt và gần như xoá sạch hàng đợi.</p>
+  <p class="lead">Tuần trước, người hỏi <code>misa-ai-1.1</code> phải chờ gần một giây mới thấy token đầu tiên. Giờ là một phần mười giây. Vẫn bộ trọng số đó, vẫn từng ấy GPU, không ai đụng vào chất lượng câu trả lời. Thứ duy nhất đổi là engine chạy phía dưới, cộng đúng một dòng cấu hình. Cuối bài là mô hình thứ hai, <code>misa-ai-2.0</code>, đổi engine cùng đợt và gần như xoá sạch thời gian chờ trong hàng đợi.</p>
 </header>
 <figure>
   <img src="img/hero.jpg" alt="Minh hoạ trừu tượng: nhiều dòng token mảnh chảy ngang, bị các khối dày chặn lại từng đợt">
@@ -39,7 +39,7 @@
 
 <p>Đầu tháng 9 tôi chuyển nó sang một bản SGLang mới hơn kèm cấu hình attention khác. Mọi thứ còn lại giữ nguyên: trọng số, context length, memory fraction, chunked prefill size, phần GPU được cấp. Cả hai bản đều không bật speculative decoding.</p>
 
-<p>Một phép so sạch như vậy hiếm khi có được trên hệ thống đang chạy thật. Chênh lệch đo được sau đó thuộc về engine và cấu hình, không còn đường nào đổ cho phần cứng hay model.</p>
+<p>Một phép so sánh có kiểm soát như vậy hiếm khi thực hiện được trên hệ thống đang chạy production. Chênh lệch đo được sau đó thuộc về engine và cấu hình, không còn đường nào đổ cho phần cứng hay model.</p>
 
 <h2>Người dùng nhận được gì</h2>
 
@@ -47,7 +47,7 @@
 
 <p>Prefill là lúc engine đọc hết input. Người dùng ngồi chờ suốt quãng này, chưa nhận được token nào. Decode là lúc model sinh câu trả lời, mỗi lần một token. Hai giai đoạn giành nhau cùng một GPU, nên engine quyết định thẳng cả thời gian chờ ban đầu lẫn tốc độ sinh token.</p>
 
-<p>Bản mới thắng ở cả hai. Prefill là chỗ nó thắng đậm.</p>
+<p>Bản mới nhanh hơn ở cả hai giai đoạn, và chênh lệch lớn nhất nằm ở prefill.</p>
 
 </div>
 
@@ -71,7 +71,7 @@
 
 <p>Ghép hai giai đoạn lại thì ra con số người dùng thực sự cảm thấy. Với response 300 token, tính theo median đo trong production, tổng thời gian từ lúc gửi request tới lúc nhận đủ câu trả lời giảm từ 2,8 xuống 1,2 giây. Quãng chờ trước token đầu tiên giảm từ 0,88 xuống 0,10 giây. Thời gian nằm trong hàng đợi lúc máy bận giảm từ 0,099 xuống 0,005 giây.</p>
 
-<p>Request xong sớm thì trả GPU sớm. Cùng một pod vì vậy gánh được 194 nghìn request mỗi ngày thay vì 88 nghìn.</p>
+<p>Request hoàn tất sớm thì giải phóng GPU sớm. Cùng một pod vì vậy phục vụ được 194 nghìn request mỗi ngày thay vì 88 nghìn.</p>
 
 </div>
 
@@ -105,7 +105,7 @@
 
 <h2>Tốc độ đến từ đâu</h2>
 
-<p>Ai từng tune serving đều biết cảm giác này: bật một loạt flag, hệ thống nhanh lên thật, rồi không ai dám chắc flag nào có công. Ở đây nhóm flag sparse prefill trông đúng như thủ phạm. Kernel viết cho prompt context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín.</p>
+<p>Khi nhiều flag được bật cùng lúc và hệ thống nhanh lên, việc quy công cho đúng flag không hiển nhiên. Ở đây nhóm flag sparse prefill là ứng viên rõ ràng nhất. Kernel viết cho prompt context rất dài, bật lên thì prefill nhanh, câu chuyện khép kín.</p>
 
 <p>Trước khi ghi công, tôi đi kiểm điều kiện để kernel đó thực sự chạy. Nó chỉ chạy khi KV cache của một request vượt 95.000 token.</p>
 
@@ -120,21 +120,21 @@
 
 <p>Sáu ngày, gần sáu triệu request, đúng 60 cái chạm ngưỡng. Sparse prefill gần như chưa bao giờ chạy, và toàn bộ mức tăng prefill thuộc về prefill backend của nhóm layer linear-attention, nhóm nằm trên đường đi của mọi request.</p>
 
-<p>Chi tiết này quyết định các lần nâng cấp sau. Nếu báo cáo ghi công nhầm, sẽ có người bê nguyên bộ sparse-prefill flags sang một model full-attention rồi ngồi thắc mắc vì sao chẳng nhanh lên, đơn giản vì điều kiện kích hoạt không bao giờ xuất hiện trong workload của họ.</p>
+<p>Chi tiết này quyết định các lần nâng cấp sau. Nếu báo cáo quy sai nguyên nhân, bộ sparse-prefill flags rất dễ được áp nguyên si sang một model full-attention, và ở đó nó sẽ không mang lại cải thiện nào, đơn giản vì điều kiện kích hoạt không bao giờ xuất hiện trong workload thực tế.</p>
 
-<p>Ai đang serving model hybrid thì để ý đúng chỗ này: chọn cấu hình theo kiến trúc model và hình dạng workload, đừng chọn theo số lượng flag bật được.</p>
+<p>Với các model kiến trúc hybrid, cấu hình serving nên được chọn theo kiến trúc và theo hình dạng workload thực tế, thay vì theo số lượng flag bật được.</p>
 
 <h2>Cùng đợt đó, misa-ai-2.0</h2>
 
-<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, và nó cũng đổi engine trong cùng đợt, từ vLLM sang sglang. Kết quả rõ nhất nằm ở hàng đợi: thời gian một request nằm chờ tới lượt giảm từ 0,297 giây xuống 0,005 giây. Gần như không còn ai phải xếp hàng.</p>
+<p><code>misa-ai-2.0</code> là model đa phương thức 26 tỷ tham số, và nó cũng đổi engine trong cùng đợt, từ vLLM sang sglang. Kết quả rõ nhất nằm ở hàng đợi: thời gian một request chờ tới lượt giảm từ 0,297 giây xuống 0,005 giây.</p>
 
-<p>Con này còn cho thấy một chi tiết đáng nhớ về cách cụm đang chạy. Có ba workload cùng phục vụ bộ trọng số đó và cả ba đều khai <code>served-model-name</code> giống hệt nhau, nhưng mỗi con gắn một api-key riêng nên gateway trỏ ba luồng traffic khác hẳn nhau: input trung bình 10.159, 8.714 và 14.272 token; output trung bình 100, 427 và 366 token.</p>
+<p>Trường hợp này còn cho thấy một chi tiết đáng chú ý về cách cụm đang vận hành. Có ba workload cùng phục vụ bộ trọng số đó và cả ba đều khai <code>served-model-name</code> giống hệt nhau, nhưng mỗi workload dùng một api-key riêng, nên gateway định tuyến cho chúng ba luồng traffic khác hẳn nhau. Input trung bình lần lượt là 10.159, 8.714 và 14.272 token; output trung bình là 100, 427 và 366 token.</p>
 
-<p>Bản mới vì vậy đang gánh gấp mười lần lượng prefill của bản cũ, 1.350 so với 126 token mỗi pod mỗi giây, mà vẫn giữ được hàng đợi gần như trống. Cùng một tên model trên giấy, ba khối lượng công việc hoàn toàn khác nhau.</p>
+<p>Bản mới vì vậy đang xử lý lượng prefill gấp mười lần bản cũ, 1.350 so với 126 token mỗi pod mỗi giây, mà hàng đợi vẫn gần như trống. Cùng một tên model trên cấu hình, ba khối lượng công việc hoàn toàn khác nhau.</p>
 
 <h2>Chốt lại</h2>
 
-<p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống gánh gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình. Con <code>misa-ai-2.0</code> thì gần như xoá sạch thời gian nằm hàng đợi.</p>
+<p>Cùng số GPU, cùng model, cùng chất lượng output. Người dùng chờ ít đi khoảng chín lần ở đoạn khó chịu nhất, hệ thống phục vụ gấp đôi số request. Giá phải trả là một lần đổi image kèm vài dòng cấu hình. Con <code>misa-ai-2.0</code> thì gần như xoá sạch thời gian nằm hàng đợi.</p>
 
 <p>Toàn bộ số liệu trong bài đọc từ Prometheus trên traffic production, cửa sổ sáu ngày, đã chuẩn hoá theo số pod thật của từng workload. Không có lượt benchmark tổng hợp nào được chạy để viết bài này.</p>
 
