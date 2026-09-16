@@ -36,32 +36,13 @@
 
 <h2>Đổi engine, giữ nguyên mọi thứ khác</h2>
 
-<p><code>misa-ai-1.1</code> hiện đang được triển khai trong môi trường production trên cụm hạ tầng nội bộ. Đây là mô hình MoE với 35 tỷ tham số, sử dụng kiến trúc hybrid linear-attention và trọng số FP8.</p>
+<p><code>misa-ai-1.1</code> là model đang phục vụ người dùng thật trên cụm hạ tầng nội bộ, mỗi ngày nhận khoảng một triệu lượt hỏi. Về mặt kỹ thuật, đây là mô hình MoE 35 tỷ tham số, kiến trúc hybrid linear-attention, trọng số FP8 &mdash; ba đặc điểm này sẽ quay lại ở phần giải thích nguyên nhân bên dưới.</p>
 
 <p>Đầu tháng 9, mô hình được chuyển sang một phiên bản SGLang mới hơn, đồng thời sử dụng một cấu hình attention khác. Trong quá trình chuyển đổi, các yếu tố còn lại được giữ nguyên: trọng số mô hình, context length, memory fraction, chunked prefill size và tài nguyên GPU được cấp phát như trước. Cả hai phiên bản đều không bật speculative decoding.</p>
 
 <p>Do đó, bất kỳ thay đổi nào quan sát được trong hiệu năng sau khi chuyển đổi đều có thể được quy về sự khác biệt ở inference engine và configuration, thay vì thay đổi về phần cứng hoặc model weights.</p>
 
-<h2>Cụ thể thì đã làm gì</h2>
 
-<p>Toàn bộ can thiệp gồm ba thay đổi, không thay đổi nào chạm vào model. Không sửa weights, không sửa tokenizer, không sửa chat template, không sửa một dòng code nào ở các service đang gọi sang nó.</p>
-
-<p>Thứ nhất là nâng container image. Bản cũ chạy từ đầu tháng 7, bản mới ra đầu tháng 9, cách nhau khoảng hai tháng phát triển upstream.</p>
-
-<p>Thứ hai là bật prefill backend dành riêng cho lớp linear-attention. Model là kiến trúc hybrid, phần lớn layer dùng linear attention, và cấu hình cũ không khai báo backend cho nhóm layer này nên chúng chạy bằng cách tính mặc định, vốn viết cho kiểu attention khác và chậm hơn hẳn với kiến trúc này.</p>
-
-<p>Thứ ba là bật thêm nhóm sparse prefill kernel cho lớp full-attention, loại kernel dành cho prompt có context rất dài, kèm một ngưỡng kích hoạt theo độ dài KV cache.</p>
-
-<p>Thay đổi thứ hai mới là thay đổi đáng giá, và đó không phải điều hiển nhiên khi nhìn vào cấu hình: nhóm flag của thay đổi thứ ba dài gấp bảy lần, nên rất dễ được ghi công nhầm. Phần lớn mức tăng prefill thuộc về nó. Phần còn lại, rõ nhất ở tốc độ decode, thuộc về bản build mới.</p>
-
-</div>
-
-<figure>
-  <img src="img/routes.jpg" alt="Một dòng chảy tách thành hai nhánh: nhánh trên rộng và mở, toàn bộ nước chảy qua đó; nhánh dưới bị một cửa cống đóng chặn lại, lòng kênh phía sau khô nứt nẻ">
-  <figcaption>Nhóm kernel thứ ba chỉ chạy khi một request dài hơn 95.000 token, mà loại request đó gần như không xuất hiện, nên nó gần như không bao giờ được gọi. Ngược lại, các layer linear-attention nằm trên đường đi của mọi request, dài hay ngắn đều phải qua, nên đổi cách tính ở đó là đổi cho toàn bộ traffic. Hình vẽ lại đúng hai nhánh này: nhánh trên nước chảy liên tục, nhánh dưới có cửa cống đóng và lòng kênh khô.</figcaption>
-</figure>
-
-<div class="col">
 
 <h2>Người dùng được hưởng lợi gì?</h2>
 
@@ -104,6 +85,27 @@
 
 <div class="col">
 
+<h2>Cụ thể thì đã làm gì</h2>
+
+<p>Toàn bộ can thiệp gồm ba thay đổi, không thay đổi nào chạm vào model. Không sửa weights, không sửa tokenizer, không sửa chat template, không sửa một dòng code nào ở các service đang gọi sang nó.</p>
+
+<p>Thứ nhất là nâng container image. Bản cũ chạy từ đầu tháng 7, bản mới ra đầu tháng 9, cách nhau khoảng hai tháng phát triển upstream.</p>
+
+<p>Thứ hai là bật prefill backend dành riêng cho lớp linear-attention. Model là kiến trúc hybrid, phần lớn layer dùng linear attention, và cấu hình cũ không khai báo backend cho nhóm layer này nên chúng chạy bằng cách tính mặc định, vốn viết cho kiểu attention khác và chậm hơn hẳn với kiến trúc này.</p>
+
+<p>Thứ ba là bật thêm nhóm sparse prefill kernel cho lớp full-attention, loại kernel dành cho prompt có context rất dài, kèm một ngưỡng kích hoạt theo độ dài KV cache.</p>
+
+<p>Thay đổi thứ hai mới là thay đổi đáng giá, và đó không phải điều hiển nhiên khi nhìn vào cấu hình: nhóm flag của thay đổi thứ ba dài gấp bảy lần, nên rất dễ được ghi công nhầm. Phần lớn mức tăng prefill thuộc về nó. Phần còn lại, rõ nhất ở tốc độ decode, thuộc về bản build mới.</p>
+
+</div>
+
+<figure>
+  <img src="img/routes.jpg" alt="Một dòng chảy tách thành hai nhánh: nhánh trên rộng và mở, toàn bộ nước chảy qua đó; nhánh dưới bị một cửa cống đóng chặn lại, lòng kênh phía sau khô nứt nẻ">
+  <figcaption>Nhóm kernel thứ ba chỉ chạy khi một request dài hơn 95.000 token, mà loại request đó gần như không xuất hiện, nên nó gần như không bao giờ được gọi. Ngược lại, các layer linear-attention nằm trên đường đi của mọi request, dài hay ngắn đều phải qua, nên đổi cách tính ở đó là đổi cho toàn bộ traffic. Hình vẽ lại đúng hai nhánh này: nhánh trên nước chảy liên tục, nhánh dưới có cửa cống đóng và lòng kênh khô.</figcaption>
+</figure>
+
+<div class="col">
+
 <h2>Nhưng hiệu năng được cải thiện nhờ đâu?</h2>
 
 <p>Đây là phần đáng chú ý nhất, bởi nguyên nhân thực tế không nằm ở yếu tố dễ được suy đoán nhất.</p>
@@ -118,7 +120,7 @@
 
 <figure>
   <img src="img/ch-threshold.jpg" alt="Thang log: toàn bộ dải p50 tới p99,9 của prompt nằm dưới 33.270 token, còn ngưỡng bật sparse prefill là 95.000 token">
-  <figcaption><b>Độ dài prompt thực tế, so với ngưỡng để sparse prefill chịu chạy.</b> Trục chia theo thang log, 5.852.014 request trong sáu ngày. Thanh xanh phủ từ mức giữa (2.400 token) tới mức 99,9% (33.270 token). Chỉ 60 request chạm được ngưỡng 95.000, tức 0,001%.</figcaption>
+  <figcaption><b>Độ dài prompt thực tế, so với ngưỡng để sparse prefill chịu chạy.</b> Trục ngang chia theo thang log, mỗi vạch là gấp mười lần vạch trước. 5.852.014 request trong sáu ngày. Thanh xanh phủ từ mức giữa (2.400 token) tới mức 99,9% (33.270 token). Chỉ 60 request chạm được ngưỡng 95.000, tức 0,001%.</figcaption>
 </figure>
 
 <div class="col">
@@ -173,7 +175,7 @@
 
 <p>Đây là trường hợp đáng chú ý nhất.</p>
 
-<p>Một câu hỏi quan trọng là: khi tải tăng cao, phiên bản mới có bị degradation về decode latency nhiều hơn hay không?</p>
+<p>Một câu hỏi quan trọng là: khi tải tăng cao, phiên bản mới có bị chậm decode nhiều hơn không? Câu hỏi này phải nhìn vào phần đuôi chứ không phải mức trung bình &mdash; tức nhóm 1% request xui nhất, thường gọi là p99. Trung bình đẹp mà đuôi xấu thì vẫn có người dùng phải ngồi chờ lâu bất thường.</p>
 
 <p>Ban đầu, tôi giữ cố định số request chạy cùng lúc trên mỗi pod rồi so độ trễ đuôi của decode. Kết quả cho thấy chênh lệch rất lớn ở dải tải cao nhất: 32,9 ms so với 180,8 ms. Từ đó, tôi đưa ra kết luận rằng phiên bản mới đánh đổi tốc độ decode lấy latency dưới tải cao.</p>
 
