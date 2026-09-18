@@ -1,0 +1,21 @@
+index.html
+  s_f1c7a958c9b763::t_1ed632701248e2 35-36,40-42,50-56
+posts/nho-gap-2-6-lan-khong-them-bo-nho/index.html
+  s_f1c7a958c9b763::t_426c2466c08482 1-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "37b1b3cf92310339924728888db48f3f8515b2e2",
+  "prompts": {},
+  "sessions": {
+    "s_f1c7a958c9b763": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d60c2942-f39f-478f-bd02-670e4be60259",
+        "model": "unknown"
+      },
+      "human_author": "tmduc3 <tmduc3@rd.misa.com.vn>"
+    }
+  }
+}
