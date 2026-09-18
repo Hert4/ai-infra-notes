@@ -105,6 +105,8 @@
 
 <p>Phép đo tải của tôi là tải tổng hợp: 500 hội thoại do tôi sinh ra, không trùng nhau, truy cập tuần tự. Traffic thật không giống vậy. Câu chưa trả lời được là tập hội thoại đang dùng của các sản phẩm thật có vừa 256 chỗ hay không. Nếu vốn đã vừa thì phương pháp này không mua thêm gì cả.</p>
 
+<p>Và có một tương tác mới phát hiện, chưa giải thích được. Trên cùng image có bật nén này, một kỹ thuật sinh JSON song song mà chúng tôi thử song song lại tụt bảy tới mười điểm độ chính xác khi phiếu có từ ba ô trở lên, trong khi đường sinh tuần tự thì không đổi. Nghi phạm là phần lượng tử hoá ảnh chụp: kỹ thuật kia tách nhiều nhánh từ cùng một trạng thái đã cache, nên nhạy với việc trạng thái được khôi phục gần đúng thay vì chính xác. Chi tiết nằm ở <a href="../sinh-json-ma-khong-sinh-chu-nao/">bài sau</a>, và phép tách vẫn chưa chạy.</p>
+
 <p>Ngoài ra, trong cả hai lần đo tôi đều để bật một cơ chế sẵn có khác, vốn chạy lại một đoạn ngắn trước mốc cache. Mà những head bị bỏ lại chính là loại hồi phục sau vài chục token. Rất có thể cơ chế kia đang vá lại đúng chỗ tôi vừa đục ra, và như vậy thì con số 18 trên 18 là công của cả cặp chứ không riêng phương pháp này. Chưa tách bạch được.</p>
 
 <h2>Tóm lại</h2>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sinh JSON mà không sinh chữ nào · MISA AI Platform</title>
+<meta name="description" content="Bắt model trả lời đúng khuôn JSON thường phải sinh tuần tự dưới ràng buộc ngữ pháp, càng nhiều ô càng chậm. Chấm điểm từng ô song song thì thời gian phẳng, nhưng phải trả giá ở chỗ khác.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<link rel="stylesheet" href="../../assets/site.css">
+</head>
+<body>
+
+<nav class="sitebar">
+  <a href="../../">MISA AI Platform</a>
+  <span class="sep">/</span>
+  <a class="back" href="../../">Nghiên cứu</a>
+</nav>
+<div class="page">
+
+<header class="mast">
+  <p class="eyebrow">Hạ tầng phục vụ mô hình</p>
+  <h1>Sinh JSON mà không sinh chữ nào</h1>
+  <p class="byline"><span>MISA AI Platform</span><span>18 tháng 9, 2026</span><span>Cụm GPU nội bộ</span></p>
+  <p class="lead">Rất nhiều việc chúng tôi giao cho model không phải là viết văn. Nó là điền vào một cái phiếu: thư này thuộc nhóm nào, có cần chuyển cho người thật không, mức độ khẩn ra sao. Phiếu càng nhiều ô thì model càng lâu, dù mỗi ô chỉ có vài lựa chọn. Tuần này tôi thử một cách khác, và mỗi request trả về một JSON hợp lệ trong khi số token model sinh ra là đúng không.</p>
+</header>
+<figure>
+  <img src="img/hero.jpg" alt="Hai hàng khối: hàng trên nối nhau bằng mũi tên theo thứ tự, hàng dưới nằm cạnh nhau không mũi tên">
+  <figcaption>Cách hiện nay điền từng ô theo thứ tự, ô sau phải chờ ô trước. Cách thử nghiệm chấm cả loạt ô cùng một lúc.</figcaption>
+</figure>
+
+<main>
+<div class="col">
+
+<h2>Vì sao điền phiếu lại chậm</h2>
+
+<p>Khi cần model trả về đúng khuôn JSON, sglang dùng xgrammar. Ở mỗi bước sinh, nó chặn mọi token làm hỏng cấu trúc, nên đầu ra luôn hợp lệ. Cách này chắc chắn và đang là mặc định ở khắp nơi.</p>
+
+<p>Cái giá là nó vẫn sinh từng token một, theo thứ tự. Một phiếu ba ô phải sinh xong ô thứ nhất mới tới ô thứ hai. Thêm một ô là thêm một lượt sinh nữa, nên thời gian tăng gần như tuyến tính theo số ô, kể cả khi mỗi ô chỉ có hai lựa chọn đúng sai.</p>
+
+<p>Nhưng với những ô kiểu đó, model đâu cần <em>viết</em> gì. Nó chỉ cần <em>chọn</em>. Và cái để chọn thì nó đã biết ngay sau khi đọc xong đầu vào.</p>
+
+<h2>Chấm điểm thay vì sinh chữ</h2>
+
+<p>Cách thay thế tôi thử tên là Jev, lấy từ một repo nhỏ công khai. Ý tưởng như sau. Cho model đọc đầu vào đúng một lần. Sau đó, với mỗi ô, ghép thêm một đoạn ngắn dẫn tới đúng chỗ phải điền, rồi nhìn phân phối xác suất ở token kế tiếp và chọn lựa chọn có điểm cao nhất. Không sinh chuỗi, không cần ngữ pháp chặn, không có ô nào phải chờ ô nào.</p>
+
+<p>Có một mẹo nhỏ làm việc này gọn hơn nhiều: khi các lựa chọn của một ô có chung phần đầu, hãy nhét luôn phần chung ấy vào đoạn dẫn. Ba lựa chọn cùng bắt đầu bằng một tiền tố thì đoạn dẫn kết thúc ngay sau tiền tố đó, và việc chọn rút về so sánh đúng một token phân biệt. Cách này cũng khử luôn chuyện hai lựa chọn trùng token đầu.</p>
+
+<p>Kết quả dễ thấy nhất nằm ở trường <code>usage</code> trả về: mọi request đi đường Jev đều báo <code>completion_tokens</code> bằng không, ở cả 154 mẫu và mọi số ô. Model không viết một chữ nào mà vẫn ra một JSON đầy đủ.</p>
+
+</div>
+
+<figure>
+  <img src="img/ch-k.jpg" alt="Biểu đồ đường: cách tuần tự tăng từ 0,10 lên 0,66 giây khi số ô tăng, cách song song nằm ngang quanh 0,11 giây">
+  <figcaption><b>Thời gian mỗi request theo số ô phải điền.</b> Đo trên chính một pod, cùng phần cứng, cùng đầu vào, bật tắt Jev bằng một cờ trong body request. Cách tuần tự tăng tuyến tính theo số ô. Cách song song gần như phẳng, vì số ô chỉ làm dài thêm phần ghép đoạn dẫn chứ không thêm lượt sinh nào. Một ô thì hai bên hoà, chín ô thì chênh 5,6 lần.</figcaption>
+</figure>
+
+<div class="col">
+
+<p>Độ chính xác từng ô thì hai bên ngang nhau. Trên tác vụ phân loại thật có đáp án, hai cách cho kết quả trùng nhau 94 tới 98 phần trăm số mẫu, và phần lệch chia đều về hai phía chứ không nghiêng hẳn về bên nào. Với cỡ mẫu 154, sai số vào khoảng bảy điểm, nên chênh lệch một vài điểm không đủ để kết luận bên nào hơn.</p>
+
+<h2>Cái giá nằm ở chỗ khác</h2>
+
+<p>Nếu chỉ nhìn tốc độ và độ chính xác từng ô thì Jev thắng không mất gì. Nhưng có một thứ nó phá vỡ theo đúng thiết kế.</p>
+
+<p>Vì mỗi ô được chấm độc lập, không ô nào nhìn thấy ô nào. Cách tuần tự thì ngược lại: lúc điền ô thứ ba, model đã đọc được ô một và ô hai nó vừa viết ra.</p>
+
+<p>Để đo, tôi đặt vào phiếu hai ô ràng buộc logic với nhau, kiểu một ô đúng khi và chỉ khi ô kia nhận một giá trị cụ thể. Không cần đáp án, chỉ cần đếm tỉ lệ hai ô nói ngược nhau.</p>
+
+</div>
+
+<figure>
+  <img src="img/ch-mauthuan.jpg" alt="Biểu đồ cột nhóm: tỉ lệ mâu thuẫn của cách tuần tự 1 đến 6 phần trăm, cách song song 11 đến 14 phần trăm">
+  <figcaption><b>Tỉ lệ hai ô ràng buộc logic lại nói ngược nhau.</b> Cách tuần tự giữ ở mức vài phần trăm vì mỗi ô nhìn thấy các ô trước. Cách song song sai một phần mười tới một phần bảy số lần, và con số này không giảm khi thêm ô. Đây không phải lỗi cài đặt, đây là hệ quả bắt buộc của việc chấm độc lập.</figcaption>
+</figure>
+
+<div class="col">
+
+<p>Nên ranh giới dùng được rất rõ. Phiếu mà các ô độc lập với nhau thì Jev dùng được, và gần như miễn phí. Phiếu mà một ô suy ra từ ô khác thì không dùng được, vì cứ mười lần sẽ sai một. Ranh giới này nằm ở bản thân bài toán, không phải ở chất lượng cài đặt, nên không có bản vá nào gỡ được nó.</p>
+
+<h2>Bài học đắt nhất không nằm ở kỹ thuật</h2>
+
+<p>Trước khi có những con số trên, tôi đã kết luận sai ba lần. Cả ba lần đều nói Jev kém hơn hẳn, và cả ba lần đều là lỗi của chính tôi trong cách dựng phép đo.</p>
+
+</div>
+
+<div class="retract">
+  <span class="tag">Đã rút lại</span>
+  <p><s>Jev mất 20 điểm độ chính xác trên một trong hai model, nên kỹ thuật này không dùng được cho model đó.</s></p>
+  <p>Sai. Nhánh đo của tôi đi một cổng không tự áp khuôn hội thoại, nên thiếu một token đặc biệt ở đầu chuỗi mà model đó bắt buộc phải có. Model còn lại không dùng token ấy nên không dính, và suốt nhiều lượt đo tôi tưởng chênh lệch là do kỹ thuật chứ không phải do phép đo. Sau khi dựng lại khuôn cho đủ, hai model cho cùng một hình dạng kết quả.</p>
+</div>
+
+<div class="col">
+
+<p>Hai lỗi còn lại cũng cùng một kiểu. Tôi tự thêm vào một bước chấm điểm toàn chuỗi mà bản gốc không có, và nó làm tệ đi năm tới chín điểm vì thiên vị các lựa chọn ngắn. Tôi nhét một đoạn hướng dẫn nhiều dòng vào một khe vốn chỉ dành cho mô tả một dòng, và độ chính xác rơi xuống 45 phần trăm.</p>
+
+<p>Cộng lại thì chênh lệch giữa các cách <em>cài đặt của riêng tôi</em> là hơn hai mươi điểm, trong khi chênh lệch giữa hai kỹ thuật là vài điểm nằm trong nhiễu. Tôi đã đi đo sự khác nhau giữa hai kỹ thuật bằng một cái thước mà sai số của nó lớn gấp năm lần thứ cần đo.</p>
+
+<p>Điều rút ra không phải là hãy cẩn thận hơn. Là khi một kỹ thuật mới cho kết quả tệ bất thường, khả năng cao nhất không phải kỹ thuật tệ, mà là bản dựng lại của mình đang sai ở đâu đó. Phải đọc mã nguồn gốc trước khi kết luận, và tôi đã kết luận ba lần trước khi làm việc đó.</p>
+
+<h2>Một chỗ chưa giải thích được</h2>
+
+<p>Bản trong engine chạy trên cùng cụm với một thay đổi khác chúng tôi vừa đưa vào, là <a href="../cat-it-di-nho-nhieu-hon/">cách nén ảnh chụp trạng thái cho cache</a>. Trên image có bật nén, độ chính xác từng ô của cách song song tụt thêm bảy tới mười điểm khi phiếu có từ ba ô trở lên, trong khi cách tuần tự không đổi. Ở một ô thì không có chênh lệch nào.</p>
+
+<p>Giả thuyết của tôi là hai thứ này chạm nhau: Jev tách nhiều nhánh từ cùng một trạng thái đã cache, mà trạng thái đó nay được khôi phục từ bản nén và bản xấp xỉ, nên điểm số ở đúng token quyết định bị nhiễu. Cách tuần tự sinh liên tục từ một trạng thái duy nhất nên ít chịu ảnh hưởng. Một ô chỉ có một nhánh nên không thấy gì.</p>
+
+<p>Đây mới là giả thuyết. Tách được nó bằng một lượt chạy có nén nhưng tắt phần lượng tử hoá, và tôi chưa chạy. Tôi viết ra đây vì nó là thứ người đọc bài trước nên biết.</p>
+
+<h2>Tóm lại</h2>
+
+<p>Với những phiếu mà các ô độc lập nhau, Jev cho cùng độ chính xác và thời gian gần như không tăng theo số ô, trong khi cách hiện nay tăng tuyến tính. Chín ô thì chênh hơn năm lần. Với phiếu có ô suy ra từ ô khác thì không dùng được, và đó là giới hạn của chính ý tưởng chứ không phải của bản cài đặt.</p>
+
+<p>Phần đáng mang đi lại là phần không liên quan gì tới JSON. Khi bạn đo một kỹ thuật mới bằng bản dựng lại của chính mình, thứ bạn đo được rất có thể là chất lượng bản dựng lại đó. Cách rẻ nhất để biết là mở mã nguồn gốc ra đọc, trước khi viết dòng kết luận đầu tiên.</p>
+
+</div>
+
+</main>
+</div>
+
+<footer class="sitefoot">
+  <a href="../../">&larr; Quay lại danh sách bài viết</a>
+</footer>
+
+</body>
+</html>
