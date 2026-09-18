@@ -1,0 +1,23 @@
+index.html
+  s_f1c7a958c9b763::t_59f07032ebbc47 35-36,40-41,50-56
+posts/cat-it-di-nho-nhieu-hon/index.html
+  s_f1c7a958c9b763::t_5b1e618f9bf557 108-109
+posts/sinh-json-ma-khong-sinh-chu-nao/index.html
+  s_f1c7a958c9b763::t_a363eb4b0ef3da 1-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "bd46f7a90d3cf8f7067fa6cafdf23102731d2afe",
+  "prompts": {},
+  "sessions": {
+    "s_f1c7a958c9b763": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d60c2942-f39f-478f-bd02-670e4be60259",
+        "model": "claude-opus-5"
+      },
+      "human_author": "tmduc3 <tmduc3@rd.misa.com.vn>"
+    }
+  }
+}
